@@ -13,3 +13,6 @@ deploy:
 
 test:
 	pxt test
+
+serve:
+	PXT_FORCE_LOCAL=1  pxt serve

@@ -7,8 +7,12 @@
         "microphone": "*"
     },
     "files": [
-        "src/main.ts",
-        "README.md"
+        "src/botmesh.ts",
+        "src/botmesh.cpp",
+        "src/radiop.ts",
+        "README.md",
+        "shims.d.ts",
+        "enums.d.ts"
     ],
     "testFiles": [
         "src/test.ts"
