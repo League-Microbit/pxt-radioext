@@ -65,9 +65,9 @@ namespace radiop {
         // Set up radio packet received handler
         radio.onReceivedBuffer(function (receivedBuffer: Buffer) {
             let packetType = receivedBuffer.getNumber(NumberFormat.UInt8LE, 0);
-            if (packetType == PACKET_TYPE_JOY && onReceiveJoyHandler) {
-                let payload = JoyPayload.fromBuffer(receivedBuffer);
-                onReceiveJoyHandler(payload);
+            if (packetType == PACKET_TYPE_JOY && joystickp.onReceiveJoyHandler) {
+                let payload = joystickp.JoyPayload.fromBuffer(receivedBuffer);
+                joystickp.onReceiveJoyHandler(payload);
             }
         });
     }
@@ -75,14 +75,14 @@ namespace radiop {
     /**
      * Register a handler for when JoyPayload messages are received
      */
-    export function onReceiveJoy(handler: (payload: JoyPayload) => void) {
-        onReceiveJoyHandler = handler;
+    export function onReceiveJoy(handler: (payload: joystickp.JoyPayload) => void) {
+        joystickp.onReceiveJoyHandler = handler;
         init(); // Ensure radio is initialized
     }
 
     export function sendJoyPayload(x: number, y: number, buttons: number[], accelX: number, accelY: number, accelZ: number): void {
         init();
-        let payload = new JoyPayload(x, y, buttons, accelX, accelY, accelZ);
+        let payload = new joystickp.JoyPayload(x, y, buttons, accelX, accelY, accelZ);
         radio.sendBuffer(payload.getBuffer());
     }   
 

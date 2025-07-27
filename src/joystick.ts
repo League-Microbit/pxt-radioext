@@ -192,7 +192,7 @@ namespace joystickp {
         }
     }
 
-    let onReceiveJoyHandler: (payload: JoyPayload) => void = null;
+    export let onReceiveJoyHandler: (payload: JoyPayload) => void = null;
 
 
     /**
