@@ -9,6 +9,42 @@ namespace joystickp {
 
     let _onReceiveJoyHandler: (payload: radiop.RadioPayload) => void = undefined;
 
+        /**
+     * Joystick value types
+     */
+    export enum JoystickValue {
+        //% block="X"
+        X = 0,
+        //% block="Y"
+        Y = 1,
+        //% block="Accelerometer X"
+        AccelX = 2,
+        //% block="Accelerometer Y"
+        AccelY = 3,
+        //% block="Accelerometer Z"
+        AccelZ = 4
+    }
+
+    /**
+     * Joystick button types
+     */
+    export enum JoystickButton {
+        //% block="A"
+        A = 0,
+        //% block="B"
+        B = 1,
+        //% block="Logo"
+        Logo = 2,
+        //% block="C"
+        C = 3,
+        //% block="D"
+        D = 4,
+        //% block="E"
+        E = 5,
+        //% block="F"
+        F = 6
+    }
+
 
     // Joystickbit pins for joystick and buttons
     enum JoystickBitPin {
@@ -195,6 +231,10 @@ namespace joystickp {
             return `JoyPayload(x=${this.x}, y=${this.y}, buttons=[${this.buttons.join(", ")}], accelX=${this.accelX}, accelY=${this.accelY}, accelZ=${this.accelZ})`;
         }
 
+        public buttonPressed(button: JoystickButton): boolean {
+            return this.buttons.indexOf(button) !== -1;
+        }
+
         get handler(): (payload: radiop.RadioPayload) => void {
             return _onReceiveJoyHandler;
         }
@@ -264,41 +304,6 @@ namespace joystickp {
         return lastJoyPayload.buttons.indexOf(button) !== -1;
     }
 
-    /**
-     * Joystick value types
-     */
-    export enum JoystickValue {
-        //% block="X"
-        X = 0,
-        //% block="Y"
-        Y = 1,
-        //% block="Accelerometer X"
-        AccelX = 2,
-        //% block="Accelerometer Y"
-        AccelY = 3,
-        //% block="Accelerometer Z"
-        AccelZ = 4
-    }
-
-    /**
-     * Joystick button types
-     */
-    export enum JoystickButton {
-        //% block="A"
-        A = 0,
-        //% block="B"
-        B = 1,
-        //% block="Logo"
-        Logo = 2,
-        //% block="C"
-        C = 3,
-        //% block="D"
-        D = 4,
-        //% block="E"
-        E = 5,
-        //% block="F"
-        F = 6
-    }
 
     /**
      * Run the joystick functionality

@@ -47,6 +47,20 @@ namespace radiop {
         get handler(): (payload: RadioPayload) => void {
             return undefined;
         }
+
+
+        get str(): string {
+            // Print buffer bytes as hex, separated by spaces (MakeCode: use toHex())
+            let hex = this.buffer.toHex();
+            // Insert spaces between every two hex digits
+            let spaced = "";
+            for (let i = 0; i < hex.length; i += 2) {
+                if (i > 0) spaced += " ";
+                spaced += hex.substr(i, 2);
+            }
+            return `RadioPayload(type=${this.packetType}, length=${this.payloadLength}, bytes=${spaced})`;
+        }
+
     }
 
     function extractPayload(buffer: Buffer): RadioPayload {

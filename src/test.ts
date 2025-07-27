@@ -8,7 +8,7 @@ let lastRateUpdate = 0;
 let messagesPerSecond = 0;
 
 // Set up joystick receive handler using the new joystickp namespace
-joystickp.onReceive(function () {
+joystickp.onReceive(function (payload: joystickp.JoyPayload) {
     messageCount++;
     
     // Calculate rate every second
@@ -18,26 +18,21 @@ joystickp.onReceive(function () {
         messagesPerSecond = Math.round(messageCount / elapsedSeconds * 100) / 100; // Round to 2 decimal places
         lastRateUpdate = currentTime;
         
-        if (false) {
-            serial.writeLine("=== RECEIVED JOY PACKET ===");
-            serial.writeLine("X: " + joystickp.getValue(joystickp.JoystickValue.X) + ", Y: " + joystickp.getValue(joystickp.JoystickValue.Y));
-            // Display pressed buttons as a list of button numbers (A=0, B=1, ..., F=5)
-            let pressedButtons: number[] = [];
-            for (let i = 0; i <= 5; i++) {
-                if (joystickp.buttonPressed(i)) pressedButtons.push(i);
-            }
-            serial.writeLine("Buttons pressed: [" + pressedButtons.join(", ") + "]");
-            serial.writeLine("Accel: X=" + joystickp.getValue(joystickp.JoystickValue.AccelX) +
-                " Y=" + joystickp.getValue(joystickp.JoystickValue.AccelY) +
-                " Z=" + joystickp.getValue(joystickp.JoystickValue.AccelZ));
-            serial.writeLine("Rate: " + messagesPerSecond + " messages/sec");
-            serial.writeLine("Total messages: " + messageCount);
-            serial.writeLine("========================");
-        } else {
-            serial.writeLine("Rate: " + messagesPerSecond + " messages/sec " + messageCount);
-        }
+        serial.writeLine(payload.str)
+        serial.writeLine("Rate: " + messagesPerSecond + " messages/sec " + messageCount);
+        
     }
 });
+
+radiop.onPayload(function (payload: radiop.RadioPayload) {
+    messageCount++;
+    let currentTime = input.runningTime();
+    let elapsedSeconds = (currentTime - startTime) / 1000;
+    messagesPerSecond = Math.round(messageCount / elapsedSeconds * 100) / 100; // Round to 2 decimal places
+    lastRateUpdate = currentTime;
+    serial.writeLine(payload.str);
+    serial.writeLine("Rate: " + messagesPerSecond + " messages/sec " + messageCount);
+}); 
 
 // Main test loop
 
