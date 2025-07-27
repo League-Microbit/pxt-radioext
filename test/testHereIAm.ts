@@ -44,7 +44,7 @@ function testBeacon() {
 
         // Send the message
         radio.sendBuffer(h.getBuffer());
-
+        basic.showNumber(i % 10);
         basic.pause(200);
 
     });
