@@ -2,7 +2,7 @@
  * Joystick blocks for micro:bit
  */
 //% color=#0066CC weight=95 icon="\uf11b" groups='["Events", "Values"]'
-namespace joystick {
+namespace joystickp {
 
     let _lastSentPayload: radiop.JoyPayload = null;
 
@@ -100,5 +100,21 @@ namespace joystick {
         E = 5,
         //% block="F"
         F = 6
+    }
+
+    /**
+     * Run the joystick functionality
+     */
+    //% blockId=joystick_run block="run joystick functionality"
+    export function run() {
+        radiop.init();
+
+        basic.forever(function () {
+            joystickp.sendIfChanged();
+        });
+
+        input.onButtonPressed(Button.AB, function () {
+            // Enter the mode to change the 
+        });
     }
 }

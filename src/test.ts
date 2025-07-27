@@ -7,8 +7,8 @@ let startTime = input.runningTime();
 let lastRateUpdate = 0;
 let messagesPerSecond = 0;
 
-// Set up joystick receive handler using the new joystick namespace
-joystick.onReceive(function () {
+// Set up joystick receive handler using the new joystickp namespace
+joystickp.onReceive(function () {
     messageCount++;
     
     // Calculate rate every second
@@ -20,16 +20,16 @@ joystick.onReceive(function () {
         
         if (false) {
             serial.writeLine("=== RECEIVED JOY PACKET ===");
-            serial.writeLine("X: " + joystick.getValue(joystick.JoystickValue.X) + ", Y: " + joystick.getValue(joystick.JoystickValue.Y));
+            serial.writeLine("X: " + joystickp.getValue(joystickp.JoystickValue.X) + ", Y: " + joystickp.getValue(joystickp.JoystickValue.Y));
             // Display pressed buttons as a list of button numbers (A=0, B=1, ..., F=5)
             let pressedButtons: number[] = [];
             for (let i = 0; i <= 5; i++) {
-                if (joystick.buttonPressed(i)) pressedButtons.push(i);
+                if (joystickp.buttonPressed(i)) pressedButtons.push(i);
             }
             serial.writeLine("Buttons pressed: [" + pressedButtons.join(", ") + "]");
-            serial.writeLine("Accel: X=" + joystick.getValue(joystick.JoystickValue.AccelX) +
-                " Y=" + joystick.getValue(joystick.JoystickValue.AccelY) +
-                " Z=" + joystick.getValue(joystick.JoystickValue.AccelZ));
+            serial.writeLine("Accel: X=" + joystickp.getValue(joystickp.JoystickValue.AccelX) +
+                " Y=" + joystickp.getValue(joystickp.JoystickValue.AccelY) +
+                " Z=" + joystickp.getValue(joystickp.JoystickValue.AccelZ));
             serial.writeLine("Rate: " + messagesPerSecond + " messages/sec");
             serial.writeLine("Total messages: " + messageCount);
             serial.writeLine("========================");
@@ -43,7 +43,7 @@ joystick.onReceive(function () {
 
 basic.forever(function () {
 
-    joystick.sendIfChanged();
+    joystickp.sendIfChanged();
 
 });
 

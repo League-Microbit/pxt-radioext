@@ -1,5 +1,5 @@
 radiop.init();
 
 basic.forever(function () {
-    joystick.sendIfChanged();
+    joystickp.sendIfChanged();
 });
