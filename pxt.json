@@ -5,10 +5,8 @@
         "core": "*",
         "radio": "*",
         "radio-broadcast": "*"
-
     },
     "files": [
-   
         "src/radiop.ts",
         "src/joystick.ts",
         "README.md",

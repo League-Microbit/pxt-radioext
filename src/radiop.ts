@@ -6,10 +6,14 @@
 
 namespace radiop {
 
-    export const PACKET_TYPE_JOY = 10;
+    export enum PacketType {
+        JOY = 10,
+        HERE_I_AM = 11
+    }
 
     let transmittingSerial: boolean = true;
     let initialized = false;
+    let payloadHandler: (payload: RadioPayload) => void; // Handles any payload if no specific handler is set
 
     /**
      * Base class for all radio payloads
@@ -39,7 +43,24 @@ namespace radiop {
         get hash(): number {
             return 0;
         }
+
+        get handler(): (payload: RadioPayload) => void {
+            return undefined;
+        }
     }
+
+    function extractPayload(buffer: Buffer): RadioPayload {
+        let packetType = buffer.getNumber(NumberFormat.UInt8LE, 0);
+        switch (packetType) {
+            case PacketType.JOY:
+                return joystickp.JoyPayload.fromBuffer(buffer);
+        }
+
+        return undefined;
+    }
+
+
+
 
     /**
      * Initialize the radio for joystick payloads
@@ -63,27 +84,31 @@ namespace radiop {
         }
 
         // Set up radio packet received handler
-        radio.onReceivedBuffer(function (receivedBuffer: Buffer) {
-            let packetType = receivedBuffer.getNumber(NumberFormat.UInt8LE, 0);
-            if (packetType == PACKET_TYPE_JOY && joystickp.onReceiveJoyHandler) {
-                let payload = joystickp.JoyPayload.fromBuffer(receivedBuffer);
-                joystickp.onReceiveJoyHandler(payload);
+        radio.onReceivedBuffer(function (buffer: Buffer) {
+            let payload = extractPayload(buffer);
+
+            if (!payload) return;
+
+            let handler = payload.handler;
+
+            if (handler) {
+                handler(payload);
+            } else {
+                // If no specific handler, use the global payload handler
+                // if it exists
+                if (payloadHandler) {
+                    payloadHandler(payload);
+                }
             }
         });
+
     }
 
-    /**
-     * Register a handler for when JoyPayload messages are received
-     */
-    export function onReceiveJoy(handler: (payload: joystickp.JoyPayload) => void) {
-        joystickp.onReceiveJoyHandler = handler;
-        init(); // Ensure radio is initialized
-    }
+   export function onPayload(handler: (payload: RadioPayload) => void) {
+       payloadHandler = handler;
+   }
 
-    export function sendJoyPayload(x: number, y: number, buttons: number[], accelX: number, accelY: number, accelZ: number): void {
-        init();
-        let payload = new joystickp.JoyPayload(x, y, buttons, accelX, accelY, accelZ);
-        radio.sendBuffer(payload.getBuffer());
-    }   
+
+
 
 }

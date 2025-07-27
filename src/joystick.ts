@@ -5,6 +5,9 @@
 namespace joystickp {
 
     let _lastSentPayload: JoyPayload = null;
+    export let lastJoyPayload: JoyPayload = null;
+
+    let _onReceiveJoyHandler: (payload: radiop.RadioPayload) => void = undefined;
 
 
     // Joystickbit pins for joystick and buttons
@@ -72,8 +75,9 @@ namespace joystickp {
         public accelY: number;
         public accelZ: number;
 
+
         constructor(x: number, y: number, buttons: number[], accelX: number, accelY: number, accelZ: number) {
-            super(radiop.PACKET_TYPE_JOY, 12);
+            super(radiop.PacketType.JOY, 12);
             this.fromValues(x, y, buttons, accelX, accelY, accelZ);
         }
 
@@ -190,9 +194,11 @@ namespace joystickp {
         get str(): string {
             return `JoyPayload(x=${this.x}, y=${this.y}, buttons=[${this.buttons.join(", ")}], accelX=${this.accelX}, accelY=${this.accelY}, accelZ=${this.accelZ})`;
         }
-    }
 
-    export let onReceiveJoyHandler: (payload: JoyPayload) => void = null;
+        get handler(): (payload: radiop.RadioPayload) => void {
+            return _onReceiveJoyHandler;
+        }
+    }
 
 
     /**
@@ -209,7 +215,6 @@ namespace joystickp {
         _lastSentPayload = jp;
     }
 
-    export let lastJoyPayload: JoyPayload = null;
 
 
     /**
@@ -218,12 +223,20 @@ namespace joystickp {
     //% blockId=joystick_on_receive block="on receive joystick"
     //% group="Events"
     //% weight=100
-    export function onReceive(handler: () => void) {
-        radiop.onReceiveJoy(function (payload: JoyPayload) {
+    export function onReceive(handler: (payload: joystickp.JoyPayload) => void) {
+        radiop.init(); // Ensure radio is initialized
+        
+        _onReceiveJoyHandler = function (payload: JoyPayload) {
             lastJoyPayload = payload;
-            handler();
-        });
+            handler(payload);
+        };
     }
+
+    export function sendJoyPayload(x: number, y: number, buttons: number[], accelX: number, accelY: number, accelZ: number): void {
+        radiop.init();
+        let payload = new joystickp.JoyPayload(x, y, buttons, accelX, accelY, accelZ);
+        radio.sendBuffer(payload.getBuffer());
+    }   
 
     /**
      * Get joystick and accelerometer values
