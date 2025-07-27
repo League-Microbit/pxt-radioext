@@ -226,6 +226,8 @@ namespace radiop {
         }
     }
 
+    let onReceiveJoyHandler: (payload: JoyPayload) => void = null;
+
     export function init() {
         if (initialized) return;
         initialized = true;
@@ -235,8 +237,23 @@ namespace radiop {
         radio.setTransmitSerialNumber(true);
         radio.setTransmitPower(7);
 
+        // Set up radio packet received handler
+        radio.onReceivedBuffer(function (receivedBuffer: Buffer) {
+            let packetType = receivedBuffer.getNumber(NumberFormat.UInt8LE, 0);
+            if (packetType == PACKET_TYPE_JOY && onReceiveJoyHandler) {
+                let payload = JoyPayload.fromBuffer(receivedBuffer);
+                onReceiveJoyHandler(payload);
+            }
+        });
     }
 
+    /**
+     * Register a handler for when JoyPayload messages are received
+     */
+    export function onReceiveJoy(handler: (payload: JoyPayload) => void) {
+        onReceiveJoyHandler = handler;
+        init(); // Ensure radio is initialized
+    }
 
     export function sendJoyPayload(x: number, y: number, buttons: number[], accelX: number, accelY: number, accelZ: number): void {
         init();
