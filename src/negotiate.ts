@@ -4,6 +4,17 @@
 
 namespace negotiate {
 
+    export let lastPayload: HereIAm = null;
+
+    let _onReceiveHandler: (payload: radiop.RadioPayload) => void = undefined;
+
+    let radioIcon: Image = images.createImage(`
+                                        # # # . .
+                                        . . . # .
+                                        # # . . #
+                                        . . # . #
+                                        # . # . #`);
+
     /**
      * Negotiation codes for broadcast messages. This identifies the domain 
      * of the negotiation and allows for future extensions.
@@ -25,7 +36,7 @@ namespace negotiate {
     export let myId = 0; // Unique ID for this device
 
 
-    export class HereIaM extends radiop.RadioPayload {
+    export class HereIAm extends radiop.RadioPayload {
         public groupMemberNumber: number;
         public radioGroup: number;
         public radioChannel: number;
@@ -35,7 +46,7 @@ namespace negotiate {
         constructor(groupMemberNumber: number, radioGroup?: number, radioChannel?: number) {
             // For V2, get radioGroup and radioChannel directly if not provided
           
-            super(radiop.PayloadType.HERE_I_AM, HereIaM.PACKET_SIZE);
+            super(radiop.PayloadType.HERE_I_AM, HereIAm.PACKET_SIZE);
             this.fromValues(groupMemberNumber, radioGroup, radioChannel);
         }
 
@@ -52,11 +63,11 @@ namespace negotiate {
             this.buffer.setNumber(NumberFormat.UInt16LE, 5, this.radioChannel);
         }
 
-        static fromBuffer(buffer: Buffer): HereIaM {
+        static fromBuffer(buffer: Buffer): HereIAm {
             let groupMemberNumber = buffer.getNumber(NumberFormat.UInt16LE, 1);
             let radioGroup = buffer.getNumber(NumberFormat.UInt16LE, 3);
             let radioChannel = buffer.getNumber(NumberFormat.UInt16LE, 5);
-            return new HereIaM(groupMemberNumber, radioGroup, radioChannel);
+            return new HereIAm(groupMemberNumber, radioGroup, radioChannel);
         }
 
 
@@ -67,6 +78,90 @@ namespace negotiate {
         get str(): string {
             return `HereIaM(groupMemberNumber=${this.groupMemberNumber}, radioGroup=${this.radioGroup}, radioChannel=${this.radioChannel}, serial=0x${lib.toHex(this.serial)})`;
         }
+
+        get handler(): (payload: HereIAm) => void {
+            return _onReceiveHandler;
+        }
+    }
+
+    /**
+     * Run code when a joystick message is received
+     */
+    //% blockId=joystick_on_receive block="on receive joystick"
+    //% group="Events"
+    //% weight=100
+    export function onReceive(handler: (payload: HereIAm) => void) {
+        radiop.init(); // Ensure radio is initialized
+
+        _onReceiveHandler = function (payload: HereIAm) {
+            lastPayload = payload;
+            handler(payload);
+        };
+
+    }
+
+    function testChannel(i: number, channel: number, group: number): Boolean {
+
+        serial.writeString(`${i} Testing channel ${channel} in group ${group}...\n`);
+        radiop.setGroup(group);
+        radiop.setChannel(channel);
+
+        negotiate.lastPayload = null; // Reset lastPayload
+        serial.writeLine("Starting channel test handler = "+ _onReceiveHandler);
+
+        let oldHandler =  _onReceiveHandler; // Save old handler
+
+        _onReceiveHandler = function (payload: radiop.RadioPayload) {
+            // do nothing, just need to set lastPayload
+            negotiate.lastPayload = payload as HereIAm; // Cast to HereIaM
+            //serial.writeLine("Received payload: " + payload.str);
+        }
+
+        let startTime = input.runningTime();
+
+        radioIcon.showImage(0); // Show radio icon to indicate negotiation started
+
+        while (input.runningTime() - startTime < 3000) {
+            if (negotiate.lastPayload) {
+                _onReceiveHandler = oldHandler; // Restore original handler
+               
+                basic.showIcon(IconNames.No);
+                basic.pause(100);
+
+                return false; // Channel is occupied
+            }
+        }
+    
+        _onReceiveHandler = oldHandler; // Restore original handler
+        basic.showIcon(IconNames.Yes);
+        basic.pause(100);
+
+        return true;
+
+    }
+
+    export function findFreeChannel(): number[] {
+        let i = 0;
+
+        serial.writeLine("Finding free radio channel...");
+        while (true) {
+            let channel = 7;  //randint(0, 83);
+            let group = 1;  //randint(0, 255);
+
+            if (testChannel(i, channel, group)) {
+                // Return both channel and group as an array
+                serial.writeLine(`Found free radio channel ${channel} in group ${group}`);
+           
+                radiop.setGroup(group);
+                radiop.setChannel(channel);
+                basic.clearScreen();
+                return [channel, group];
+            }
+
+            i++;
+
+        }
+        return [-1, -1]; // No free channel found
     }
 
 }

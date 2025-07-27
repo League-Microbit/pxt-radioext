@@ -18,7 +18,8 @@
     ],
     "testFiles": [
         "test/test.ts",
-        "test/testHereIAm.ts"
+        "test/testHereIAm.ts",
+        "test/testJoystick.ts"
     ],
     "targetVersions": {
         "target": "8.0.11",

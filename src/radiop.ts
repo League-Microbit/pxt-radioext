@@ -116,7 +116,7 @@ namespace radiop {
             case PayloadType.JOY:
                 return joystickp.JoyPayload.fromBuffer(buffer);
             case PayloadType.HERE_I_AM:
-                return negotiate.HereIaM.fromBuffer(buffer);
+                return negotiate.HereIAm.fromBuffer(buffer);
         }
 
         return undefined;
