@@ -64,7 +64,7 @@ namespace joystickp {
     let jsYOffset = 0; // Offset for joystick Y
     let jsDeadzone = 10; // Deadzone for joystick movement
 
-    export function initJoystickBit(): void {
+    export function init(): void {
         if (joystickInitialize) return;
         joystickInitialize = true;
         pins.digitalWritePin(DigitalPin.P0, 0)
@@ -81,6 +81,7 @@ namespace joystickp {
         let startTime = input.runningTime();
         
         // Collect samples for 1 second
+        basic.showIcon(IconNames.Target);
         while (input.runningTime() - startTime < 1000) {
             xSum += pins.analogReadPin(JoystickBitPin.X);
             ySum += pins.analogReadPin(JoystickBitPin.Y);
@@ -98,6 +99,10 @@ namespace joystickp {
         jsYOffset = jsYCenter - defaultCenter; // Adjust offset based on center
 
         serial.writeLine("Joystick calibrated - Center X: " + jsXCenter + ", Y: " + jsYCenter);
+        basic.showIcon(IconNames.Yes);
+        basic.pause(200);
+        basic.clearScreen();
+
     }
     /**
      * Joystick payload with x, y, buttons, and accelerometer data
@@ -114,7 +119,7 @@ namespace joystickp {
         static PACKET_SIZE = 12; // Size of the payload in bytes
 
         constructor(x: number, y: number, buttons: number[], accelX: number, accelY: number, accelZ: number) {
-            super(radiop.PacketType.JOY, JoyPayload.PACKET_SIZE);
+            super(radiop.PayloadType.JOY, JoyPayload.PACKET_SIZE);
             this.fromValues(x, y, buttons, accelX, accelY, accelZ);
         }
 
@@ -146,7 +151,7 @@ namespace joystickp {
          * Create a JoyPayload from current hardware state
          */
         static fromHardware(readAccelerometer: boolean = false): JoyPayload {
-            initJoystickBit()
+            init()
 
             // Read joystick X and Y from analog pins
             let rawX = pins.analogReadPin(JoystickBitPin.X);

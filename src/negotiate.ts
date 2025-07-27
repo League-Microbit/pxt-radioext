@@ -26,17 +26,47 @@ namespace negotiate {
 
 
     export class HereIaM extends radiop.RadioPayload {
+        public groupMemberNumber: number;
+        public radioGroup: number;
+        public radioChannel: number;
+
+        static readonly PACKET_SIZE = 7; // 1 (type) + 2 (groupMemberNumber) + 2 (radioGroup) + 2 (radioChannel)
+
+        constructor(groupMemberNumber: number, radioGroup?: number, radioChannel?: number) {
+            // For V2, get radioGroup and radioChannel directly if not provided
+          
+            super(radiop.PayloadType.HERE_I_AM, HereIaM.PACKET_SIZE);
+            this.fromValues(groupMemberNumber, radioGroup, radioChannel);
+        }
+
+        fromValues(groupMemberNumber: number, radioGroup: number, radioChannel: number) {
+
+            this.groupMemberNumber = groupMemberNumber;
+
+            this.radioGroup = radioGroup !== undefined ? radioGroup : radiop.getGroup();
+            this.radioChannel =  radioChannel !== undefined ? radioChannel : radiop.getChannel();
+
+            this.buffer.setNumber(NumberFormat.UInt8LE, 0, radiop.PayloadType.HERE_I_AM);
+            this.buffer.setNumber(NumberFormat.UInt16LE, 1, groupMemberNumber);
+            this.buffer.setNumber(NumberFormat.UInt16LE, 3, this.radioGroup);
+            this.buffer.setNumber(NumberFormat.UInt16LE, 5, this.radioChannel);
+        }
+
+        static fromBuffer(buffer: Buffer): HereIaM {
+            let groupMemberNumber = buffer.getNumber(NumberFormat.UInt16LE, 1);
+            let radioGroup = buffer.getNumber(NumberFormat.UInt16LE, 3);
+            let radioChannel = buffer.getNumber(NumberFormat.UInt16LE, 5);
+            return new HereIaM(groupMemberNumber, radioGroup, radioChannel);
+        }
 
 
-        static PACKET_SIZE = 0;
+        get hash(): number {
+            return (this.groupMemberNumber ^ this.radioGroup ^ this.radioChannel ^ this.serial ) & 0xFFFFFFFF;
+        }
 
-        constructor() {
-            super(radiop.PacketType.HERE_I_AM, HereIaM.PACKET_SIZE);
-            this.fromValues();
-            }
-        
-        fromValues() {
-
+        get str(): string {
+            return `HereIaM(groupMemberNumber=${this.groupMemberNumber}, radioGroup=${this.radioGroup}, radioChannel=${this.radioChannel}, serial=${this.serial})`;
+        }
     }
-        
+
 }

@@ -9,13 +9,15 @@
     "files": [
         "src/radiop.ts",
         "src/joystick.ts",
+        "src/negotiate.ts",
         "README.md",
         "shims.d.ts",
         "enums.d.ts",
         "src/main.ts"
     ],
     "testFiles": [
-        "src/test.ts"
+        "test/test.ts",
+        "test/testHereIAm.ts"
     ],
     "targetVersions": {
         "target": "8.0.11",
