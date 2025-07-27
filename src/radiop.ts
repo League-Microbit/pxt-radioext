@@ -228,14 +228,26 @@ namespace radiop {
 
     let onReceiveJoyHandler: (payload: JoyPayload) => void = null;
 
-    export function init() {
+    /**
+     * Initialize the radio for joystick payloads
+     * @param group radio group (default 1)
+     * @param channel radio channel (default 7)
+     * @param power transmit power (default 7, range 0-7)
+     */
+    export function init(group: number = 1, channel: number = 7, power?: number) {
         if (initialized) return;
         initialized = true;
 
         // Initialize radio
-        radio.setGroup(1);
+        radio.setGroup(group);
+        radio.setFrequencyBand(channel);
         radio.setTransmitSerialNumber(true);
-        radio.setTransmitPower(7);
+        
+        if (power !== undefined) {
+            radio.setTransmitPower(power);
+        } else {
+            radio.setTransmitPower(7);
+        }
 
         // Set up radio packet received handler
         radio.onReceivedBuffer(function (receivedBuffer: Buffer) {

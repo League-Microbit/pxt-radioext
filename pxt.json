@@ -7,8 +7,7 @@
 
     },
     "files": [
-        "src/botmesh.ts",
-        "src/botmesh.cpp",
+   
         "src/radiop.ts",
         "src/joystick.ts",
         "README.md",

@@ -4,6 +4,22 @@
 //% color=#0066CC weight=95 icon="\uf11b" groups='["Events", "Values"]'
 namespace joystick {
 
+    let _lastSentPayload: radiop.JoyPayload = null;
+
+    /**
+     * Send the current joystick state over radio only if it is different from the previous one
+     */
+    //% blockId=joystick_send_if_changed block="send joystick state if changed"
+    //% group="Events"
+    //% weight=70
+    export function sendIfChanged() {
+        let jp = radiop.JoyPayload.fromHardware();
+        if (_lastSentPayload && _lastSentPayload.hash != jp.hash) {
+            radio.sendBuffer(jp.getBuffer());
+        }
+        _lastSentPayload = jp;
+    }
+
     export let lastJoyPayload: radiop.JoyPayload = null;
 
 

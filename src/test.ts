@@ -40,16 +40,10 @@ joystick.onReceive(function () {
 });
 
 // Main test loop
-let lastPayload: radiop.JoyPayload | null = null;
+
 basic.forever(function () {
 
-    let jp = radiop.JoyPayload.fromHardware();
-   
-    if (lastPayload && lastPayload.hash != jp.hash) {
-        radio.sendBuffer(jp.getBuffer());
-    }
+    joystick.sendIfChanged();
 
-    lastPayload = jp; 
-  
 });
 
