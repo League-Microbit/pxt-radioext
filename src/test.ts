@@ -22,7 +22,7 @@ radiop.onPayload(function (payload: radiop.RadioPayload) {
 
 basic.forever(function () {
 
-    joystickp.sendIfChanged();
+    //joystickp.sendIfChanged();
 
 });
 

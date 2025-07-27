@@ -111,9 +111,10 @@ namespace joystickp {
         public accelY: number;
         public accelZ: number;
 
+        static PACKET_SIZE = 12; // Size of the payload in bytes
 
         constructor(x: number, y: number, buttons: number[], accelX: number, accelY: number, accelZ: number) {
-            super(radiop.PacketType.JOY, 12);
+            super(radiop.PacketType.JOY, JoyPayload.PACKET_SIZE);
             this.fromValues(x, y, buttons, accelX, accelY, accelZ);
         }
 

@@ -28,6 +28,11 @@ namespace radiop {
             this.buffer.setNumber(NumberFormat.UInt8LE, 0, packetType);
         }
 
+
+        static fromBuffer(buffer: Buffer): RadioPayload {
+            return undefined;
+        }
+
         getBuffer(): Buffer {
             return this.buffer;
         }

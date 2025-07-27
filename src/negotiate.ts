@@ -27,6 +27,16 @@ namespace negotiate {
 
     export class HereIaM extends radiop.RadioPayload {
 
+
+        static PACKET_SIZE = 0;
+
+        constructor() {
+            super(radiop.PacketType.HERE_I_AM, HereIaM.PACKET_SIZE);
+            this.fromValues();
+            }
+        
+        fromValues() {
+
     }
         
 }
