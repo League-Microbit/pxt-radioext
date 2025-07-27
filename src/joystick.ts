@@ -238,21 +238,17 @@ namespace joystickp {
         radio.sendBuffer(payload.getBuffer());
     }   
 
-    /**
-     * Get joystick and accelerometer values
-     */
-    //% blockId=joystick_value block="joystick %value"
+    //% blockId=joystick_value block="joystick %payload value %value"
     //% group="Values"
     //% weight=90
-    export function getValue(value: JoystickValue): number {
-        if (!lastJoyPayload) return 0;
-        
+    export function getValue(payload: JoyPayload, value: JoystickValue): number {
+        if (!payload) return 0;
         switch (value) {
-            case JoystickValue.X: return lastJoyPayload.x;
-            case JoystickValue.Y: return lastJoyPayload.y;
-            case JoystickValue.AccelX: return lastJoyPayload.accelX;
-            case JoystickValue.AccelY: return lastJoyPayload.accelY;
-            case JoystickValue.AccelZ: return lastJoyPayload.accelZ;
+            case JoystickValue.X: return payload.x;
+            case JoystickValue.Y: return payload.y;
+            case JoystickValue.AccelX: return payload.accelX;
+            case JoystickValue.AccelY: return payload.accelY;
+            case JoystickValue.AccelZ: return payload.accelZ;
             default: return 0;
         }
     }
