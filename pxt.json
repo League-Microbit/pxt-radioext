@@ -13,7 +13,8 @@
         "src/joystick.ts",
         "README.md",
         "shims.d.ts",
-        "enums.d.ts"
+        "enums.d.ts",
+        "src/main.ts"
     ],
     "testFiles": [
         "src/test.ts"
