@@ -65,7 +65,7 @@ namespace negotiate {
         }
 
         get str(): string {
-            return `HereIaM(groupMemberNumber=${this.groupMemberNumber}, radioGroup=${this.radioGroup}, radioChannel=${this.radioChannel}, serial=${this.serial})`;
+            return `HereIaM(groupMemberNumber=${this.groupMemberNumber}, radioGroup=${this.radioGroup}, radioChannel=${this.radioChannel}, serial=0x${lib.toHex(this.serial)})`;
         }
     }
 
