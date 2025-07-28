@@ -6,8 +6,8 @@
 //% color=#0066CC weight=95 icon="\uf11b" blockNamespace="Radio Ext"
 namespace radiop {
 
-    let _group: number = 1;
-    let _channel: number = 7;
+    let _group: number = negotiate.BROADCAST_GROUP;
+    let _channel: number = negotiate.BROADCAST_CHANNEL;
 
     export function setGroup(group: number) {
         _group = group;
@@ -134,7 +134,8 @@ namespace radiop {
      * @param channel radio channel (default 7)
      * @param power transmit power (default 7, range 0-7)
      */
-    export function init( channel: number = 7,group: number = 1, power?: number) {
+    export function init(channel: number = negotiate.BROADCAST_CHANNEL,
+                          group: number = negotiate.BROADCAST_GROUP, power?: number) {
         if (initialized) {
             serial.writeLine("Radio already initialized");
             return;
@@ -142,7 +143,7 @@ namespace radiop {
         initialized = true;
 
         // Initialize radio
-        serial.writeLine(`Radio initialized on group ${group}, channel ${channel}`);
+        serial.writeLine(`Radio initialized on channel ${channel}, group ${group}`);
         setGroup(group);
         setChannel(channel);
         radio.setTransmitSerialNumber(true);
