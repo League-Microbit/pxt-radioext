@@ -98,7 +98,7 @@ namespace radiop {
         send(): void {
             radio.sendBuffer(this.getBuffer());
         }
-        
+
         get str(): string {
             // Print buffer bytes as hex, separated by spaces (MakeCode: use toHex())
             let hex = this.buffer.toHex();
@@ -134,7 +134,7 @@ namespace radiop {
      * @param channel radio channel (default 7)
      * @param power transmit power (default 7, range 0-7)
      */
-    export function init(group: number = 1, channel: number = 7, power?: number) {
+    export function init( channel: number = 7,group: number = 1, power?: number) {
         if (initialized) return;
         initialized = true;
 

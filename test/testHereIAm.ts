@@ -1,60 +1,60 @@
 let memberNumber = 0;
 
-function testHereIAm() {
+namespace radioptest {
+    export function testHereIAm() {
+        radiop.init();
 
-    basic.forever(function () {
-        // Create HereIaM with current member number, default group/channel
-        let h1 = new negotiate.HereIAm('footester');
-        // Reconstruct from buffer
-        let h2 = negotiate.HereIAm.fromBuffer(h1.getBuffer());
+        for (let i = 0; i < 10; ++i) {
+            // Create HereIaM with current member number, default group/channel
+            let h1 = new negotiate.HereIAm('footester_' + i);
+            // Reconstruct from buffer
+            let h2 = negotiate.HereIAm.fromBuffer(h1.getBuffer());
 
-        // Compare hashes and show status
-        if (h1.hash === h2.hash) {
-            basic.showIcon(IconNames.Yes);
-        } else {
-            basic.showIcon(IconNames.No);
-            serial.writeLine("Hash mismatch! h1: " + h1.hash + " h2: " + h2.hash);
-            serial.writeLine("h1: " + h1.str);
-            serial.writeLine("h2: " + h2.str);
+            // Compare hashes and show status
+            if (h1.hash === h2.hash) {
+                serial.writeLine(h1.str);
+                basic.showIcon(IconNames.Yes);
+            } else {
+                basic.showIcon(IconNames.No);
+                serial.writeLine("Hash mismatch! h1: " + h1.hash + " h2: " + h2.hash);
+                serial.writeLine("h1: " + h1.str);
+                serial.writeLine("h2: " + h2.str);
+            }
+
+            // Send the message
+            h1.send()
+
+            basic.pause(200);
         }
 
-        // Send the message
-        radio.sendBuffer(h1.getBuffer());
 
-        // Increment member number, wrap at 2^16
-        memberNumber = (memberNumber + 1) & 0xFFFF;
+    }
 
-        basic.pause(200);
-        basic.clearScreen()
-    });
+    export function testBeacon() {
 
-}
+        radiop.init(10, 10);
+        negotiate.init('beacontester');
+        while (true) {
+            negotiate.broadcastHereIAm(new negotiate.HereIAm('beacontester_b'));
+            basic.pause(2000);
+        }
 
-/**
- * Send a HereIAm every 200ms
- */
-function testBeacon() {
+    }
 
-    let i = 0;
-    basic.forever(function () {
-        // Create HereIAm with current member number, default group/channel
-        let h = new negotiate.HereIAm("test_"+i);
+    export function testFindChannel() {
+        
+        radiop.init();
 
-        i++;
+        negotiate.findFreeChannel()
 
-        // Send the message
-        radio.sendBuffer(h.getBuffer());
-        basic.showNumber(i % 10);
-        basic.pause(200);
+    }
 
-    });
+    export function testListen() {
+        radiop.init();
+        negotiate.onReceive((payload) => {
+            serial.writeLine("Received: " + payload.str);
+        });
 
-}
-
-function testFindChannel() {
-    
-    radiop.init();
-
-    negotiate.findFreeChannel()
+    }
 
 }
