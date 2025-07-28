@@ -87,7 +87,7 @@ namespace negotiate {
     /**
      * Run code when a joystick message is received
      */
-    //% blockId=joystick_on_receive block="on receive joystick"
+    //% blockId=joystick_on_receive block="on receive HereIAm"
     //% group="Events"
     //% weight=100
     export function onReceive(handler: (payload: HereIAm) => void) {
@@ -99,6 +99,8 @@ namespace negotiate {
         };
 
     }
+
+    /* Look for traffic on a channel/group    */
 
     function testChannel(i: number, channel: number, group: number): Boolean {
 
@@ -148,7 +150,7 @@ namespace negotiate {
     * HereIAm messages from other senders.
     * If no messages are received within 5 seconds, return the channel and group.
     * */
-    
+    //% blockId=find_free_channel block="find free radio channel"
     export function findFreeChannel(): number[] {
         let i = 0;
 

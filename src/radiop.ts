@@ -3,7 +3,7 @@
 * 
 * JoyPayload - for joystick data including position, buttons, and accelerometer
 */
-
+//% color=#0066CC weight=95 icon="\uf11b" blockNamespace="Radio Ext"
 namespace radiop {
 
     let _group: number = 1;
@@ -166,6 +166,11 @@ namespace radiop {
 
     }
 
+    /**
+     * Set a global handler for any radio payload
+     * @param handler function to handle the payload
+     */
+    //% blockId=radio_on_payload block="on radio extended payload"
    export function onPayload(handler: (payload: RadioPayload) => void) {
        payloadHandler = handler;
    }

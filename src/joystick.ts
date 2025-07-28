@@ -1,7 +1,8 @@
 /**
  * Joystick blocks for micro:bit
  */
-//% color=#0066CC weight=95 icon="\uf11b" groups='["Events", "Values"]'
+//% color=#0066CC weight=95 icon="\uf11b" blockNamespace="Joystick Radio"
+//% 
 namespace joystickp {
 
     let _lastSentPayload: JoyPayload = null;
