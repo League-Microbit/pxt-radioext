@@ -158,12 +158,12 @@ namespace radiop {
         radio.onReceivedBuffer(function (buffer: Buffer) {
             let payload = extractPayload(buffer);
             payload.packet = radio.lastPacket;
+            serial.writeLine(`oRB: ${payload.str} on channel ${getChannel()}, group ${getGroup()}`);
 
             if (!payload) return;
 
             let handler = payload.handler;
 
-            
             if (handler) {
                 handler(payload);
             } else {

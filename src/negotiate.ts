@@ -10,7 +10,7 @@ namespace negotiate {
     let _onReceiveHandler: (payload: HereIAm) => void = defaultOnReceiveHandler;
 
     export const BROADCAST_CHANNEL = 10; // Default broadcast channel for HereIAm messages
-    export const BROADCAST_GROUP = 1; // Default broadcast group for HereIAm messages
+    export const BROADCAST_GROUP = 10; // Default broadcast group for HereIAm messages
 
     export const radioIcon: Image = images.createImage(`
                                         # # # . .
