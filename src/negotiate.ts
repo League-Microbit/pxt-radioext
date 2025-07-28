@@ -6,7 +6,10 @@ namespace negotiate {
 
     export let lastPayload: HereIAm = null;
 
-    let _onReceiveHandler: (payload: radiop.RadioPayload) => void = undefined;
+    let _onReceiveHandler: (payload: HereIAm) => void = defaultOnReceiveHandler;
+
+    export const BROADCAST_CHANNEL = 7; // Default broadcast channel for HereIAm messages
+    export const BROADCAST_GROUP = 1; // Default broadcast group for HereIAm messages
 
     export const radioIcon: Image = images.createImage(`
                                         # # # . .
@@ -15,68 +18,97 @@ namespace negotiate {
                                         . . # . #
                                         # . # . #`);
 
-    /**
-     * Negotiation codes for broadcast messages. This identifies the domain 
-     * of the negotiation and allows for future extensions.
-     */
-    export enum NegotiationCode {
-        RadioChannel = 1
-    }
-
-    export enum PhaseCode {
-        Query = 0, // Home Device is asking for the highest assigned number
-        Request = 1, // Home Device is asking if it can have a number
-        Ack = 2, // Remote device responds that the number is unallocated
-        Nack = 3, // Remote device responds that the number is allocated
-        Assigned = 4 // Home Device asserts ownership of the number
-    }
-
-    // List of numbers that have been assigned.
-    let assignedNumbers: number[] = [];
-    export let myId = 0; // Unique ID for this device
-
-
-    export class HereIAm extends radiop.RadioPayload {
-        public groupMemberNumber: number;
+    /* Record of a peer in the network */
+    export class PeerRecord {
+        public serial: number;
         public radioGroup: number;
         public radioChannel: number;
+        public classId: string; // Class ID of the peer, like 'joystick' or 'robot'
+        public lastSeen: number; // Timestamp of last seen
+    }
 
-        static readonly PACKET_SIZE = 7; // 1 (type) + 2 (groupMemberNumber) + 2 (radioGroup) + 2 (radioChannel)
+    // Store peer records
+    let _peers: PeerRecord[] = [];
 
-        constructor(groupMemberNumber: number, radioGroup?: number, radioChannel?: number) {
-            // For V2, get radioGroup and radioChannel directly if not provided
-          
-            super(radiop.PayloadType.HERE_I_AM, HereIAm.PACKET_SIZE);
-            this.fromValues(groupMemberNumber, radioGroup, radioChannel);
+    /**
+     * Find the first peer by serial.
+     */
+    export function findPeerBySerial(serial: number): PeerRecord {
+        for (let peer of _peers) {
+            if (peer.serial == serial) {
+                return peer;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Add a peer record. radioGroup and radioChannel are optional; if not set,
+     * use radiop.getGroup() and radiop.getChannel().
+     */
+    export function addPeerRecord(serial: number, classId: string, radioGroup?: number, radioChannel?: number): PeerRecord {
+        let peer = findPeerBySerial(serial);
+        if (!peer) {
+            peer = new PeerRecord();
+            peer.serial = serial;
+            _peers.push(peer);
         }
 
-        fromValues(groupMemberNumber: number, radioGroup: number, radioChannel: number) {
+        peer.classId = classId;
+        peer.radioGroup = radioGroup !== undefined ? radioGroup : radiop.getGroup();
+        peer.radioChannel = radioChannel !== undefined ? radioChannel : radiop.getChannel();
+        peer.lastSeen = input.runningTime();
+        return peer;
+    }
 
-            this.groupMemberNumber = groupMemberNumber;
+    /**
+     * Find the first peer by classId.
+     */
+    export function findPeerByClassId(classId: string): PeerRecord {
+        for (let peer of _peers) {
+            if (peer.classId == classId) {
+                return peer;
+            }
+        }
+        return null;
+    }
 
-            this.radioGroup = radioGroup !== undefined ? radioGroup : radiop.getGroup();
-            this.radioChannel =  radioChannel !== undefined ? radioChannel : radiop.getChannel();
+    
+    export class HereIAm extends radiop.RadioPayload {
+        public classId: string;
+        public group: number;
+        public channel: number;
 
+        static readonly PACKET_SIZE = 6; // 1 (type) + 1 (classId as UInt8) + 2 (group) + 2 (channel)
+
+        constructor(classId: string, group?: number, channel?: number) {
+            super(radiop.PayloadType.HERE_I_AM, HereIAm.PACKET_SIZE);
+            this.fromValues(classId, group, channel);
+        }
+
+        fromValues(classId: string, group?: number, channel?: number): void {
+            this.classId = classId;
+            this.group = group !== undefined ? group : radiop.getGroup();
+            this.channel = channel !== undefined ? channel : radiop.getChannel();
             this.buffer.setNumber(NumberFormat.UInt8LE, 0, radiop.PayloadType.HERE_I_AM);
-            this.buffer.setNumber(NumberFormat.UInt16LE, 1, groupMemberNumber);
-            this.buffer.setNumber(NumberFormat.UInt16LE, 3, this.radioGroup);
-            this.buffer.setNumber(NumberFormat.UInt16LE, 5, this.radioChannel);
+            this.buffer.setNumber(NumberFormat.UInt8LE, 1, classId.length > 0 ? classId.charCodeAt(0) : 0);
+            this.buffer.setNumber(NumberFormat.UInt16LE, 2, this.group);
+            this.buffer.setNumber(NumberFormat.UInt16LE, 4, this.channel);
         }
 
         static fromBuffer(buffer: Buffer): HereIAm {
-            let groupMemberNumber = buffer.getNumber(NumberFormat.UInt16LE, 1);
-            let radioGroup = buffer.getNumber(NumberFormat.UInt16LE, 3);
-            let radioChannel = buffer.getNumber(NumberFormat.UInt16LE, 5);
-            return new HereIAm(groupMemberNumber, radioGroup, radioChannel);
+            let classIdChar = buffer.getNumber(NumberFormat.UInt8LE, 1);
+            let group = buffer.getNumber(NumberFormat.UInt16LE, 2);
+            let channel = buffer.getNumber(NumberFormat.UInt16LE, 4);
+            return new HereIAm(String.fromCharCode(classIdChar), group, channel);
         }
 
-
         get hash(): number {
-            return (this.groupMemberNumber ^ this.radioGroup ^ this.radioChannel ^ this.serial ) & 0xFFFFFFFF;
+            return (this.classId.length > 0 ? this.classId.charCodeAt(0) : 0) ^ (this.serial || 0);
         }
 
         get str(): string {
-            return `HereIaM(groupMemberNumber=${this.groupMemberNumber}, radioGroup=${this.radioGroup}, radioChannel=${this.radioChannel}, serial=0x${relib.toHex(this.serial)})`;
+            return `HereIaM(classId=${this.classId}, serial=0x${relib.toHex(this.serial)})`;
         }
 
         get handler(): (payload: HereIAm) => void {
@@ -84,20 +116,28 @@ namespace negotiate {
         }
     }
 
-    /**
-     * Run code when a joystick message is received
-     */
-    //% blockId=joystick_on_receive block="on receive HereIAm"
-    //% group="Events"
-    //% weight=100
+    /* Handler for HereIAm messages */
+    function defaultOnReceiveHandler(payload: HereIAm) {
+        lastPayload = payload;
+   
+        addPeerRecord(payload.serial, payload.classId,
+                    radiop.getGroup(), radiop.getChannel());
+    };
+
     export function onReceive(handler: (payload: HereIAm) => void) {
-        radiop.init(); // Ensure radio is initialized
+        _onReceiveHandler = handler;
+    }
 
-        _onReceiveHandler = function (payload: HereIAm) {
-            lastPayload = payload;
-            handler(payload);
-        };
 
+    export function broadcastHereIAm(hia: HereIAm) {
+        let origChannel = radiop.getChannel();
+        let origGroup = radiop.getGroup();
+        radiop.setChannel(BROADCAST_CHANNEL);
+        radiop.setGroup(BROADCAST_GROUP);
+        hia.send(); 
+        radiop.setChannel(origChannel);
+        radiop.setGroup(origGroup);
+        basic.pause(100); // Allow some time for the message to be sent
     }
 
     /* Look for traffic on a channel/group    */
@@ -111,13 +151,6 @@ namespace negotiate {
         negotiate.lastPayload = null; // Reset lastPayload
         ///serial.writeLine("Starting channel test handler = "+ _onReceiveHandler);
 
-        let oldHandler =  _onReceiveHandler; // Save old handler
-
-        _onReceiveHandler = function (payload: radiop.RadioPayload) {
-            // do nothing, just need to set lastPayload
-            negotiate.lastPayload = payload as HereIAm; // Cast to HereIaM
-            //serial.writeLine("Received payload: " + payload.str);
-        }
 
         let startTime = input.runningTime();
 
@@ -125,8 +158,7 @@ namespace negotiate {
 
         while (input.runningTime() - startTime < 5000) {
             if (negotiate.lastPayload) {
-                _onReceiveHandler = oldHandler; // Restore original handler
-               
+
                 basic.showIcon(IconNames.No);
                 basic.pause(100);
 
@@ -135,8 +167,7 @@ namespace negotiate {
                 basic.pause(100); // Wait for a bit before checking again
             }
         }
-    
-        _onReceiveHandler = oldHandler; // Restore original handler
+
         basic.showIcon(IconNames.Yes);
         basic.pause(100);
 

@@ -4,7 +4,7 @@ function testHereIAm() {
 
     basic.forever(function () {
         // Create HereIaM with current member number, default group/channel
-        let h1 = new negotiate.HereIAm(memberNumber);
+        let h1 = new negotiate.HereIAm('footester');
         // Reconstruct from buffer
         let h2 = negotiate.HereIAm.fromBuffer(h1.getBuffer());
 
@@ -38,7 +38,7 @@ function testBeacon() {
     let i = 0;
     basic.forever(function () {
         // Create HereIAm with current member number, default group/channel
-        let h = new negotiate.HereIAm(i);
+        let h = new negotiate.HereIAm("test_"+i);
 
         i++;
 

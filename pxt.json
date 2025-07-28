@@ -5,7 +5,6 @@
         "core": "*",
         "radio": "*",
         "radio-broadcast": "*"
-
     },
     "files": [
         "src/radiop.ts",

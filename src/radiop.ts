@@ -95,7 +95,10 @@ namespace radiop {
             return undefined;
         }
 
-
+        send(): void {
+            radio.sendBuffer(this.getBuffer());
+        }
+        
         get str(): string {
             // Print buffer bytes as hex, separated by spaces (MakeCode: use toHex())
             let hex = this.buffer.toHex();
@@ -110,6 +113,8 @@ namespace radiop {
 
     }
 
+    /* Construct a payload from a buffer. This is the central
+    * place to add definitions for new payloads */
     function extractPayload(buffer: Buffer): RadioPayload {
         let packetType = buffer.getNumber(NumberFormat.UInt8LE, 0);
         switch (packetType) {
