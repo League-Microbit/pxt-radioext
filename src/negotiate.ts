@@ -151,7 +151,7 @@ namespace negotiate {
     * If no messages are received within 5 seconds, return the channel and group.
     * */
     //% blockId=find_free_channel block="find free radio channel"
-    export function findFreeChannel(): number[] {
+    export function findFreeChannel(): void {
         let i = 0;
 
         /* channel and group based on the scrambled machine id,
@@ -168,7 +168,7 @@ namespace negotiate {
                 radiop.setGroup(group);
                 radiop.setChannel(channel);
                 basic.clearScreen();
-                return [channel, group];
+                return;
             }
 
             channel = randint(0, 83);
@@ -178,7 +178,7 @@ namespace negotiate {
             i++;
 
         }
-        return [-1, -1]; // No free channel found
+        return;
     }
 
 
