@@ -35,5 +35,17 @@ namespace lib {
         let scrambledId = murmur_32_scramble(machineId);
         // Return the last 12 bits
         return scrambledId & 0xFFF;
-    }     
+    } 
+    
+    /* Get an initial request for a radio channel and group, 
+    * based on the scrambled machine id. */
+    export function getInitialRadioRequest(): number[] {
+        let machineId = control.deviceSerialNumber();
+        let scrambledId = murmur_32_scramble(machineId);
+
+        let channel = ( (scrambledId & 0x0FFFF000) >> 12) % 84; // 0-83
+        let group = scrambledId & 0xFF; // 0-255
+
+        return [channel, group];
+    }
 }

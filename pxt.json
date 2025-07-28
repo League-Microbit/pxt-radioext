@@ -4,7 +4,8 @@
     "dependencies": {
         "core": "*",
         "radio": "*",
-        "radio-broadcast": "*"
+        "radio-broadcast": "*",
+        "leagueir": "github:League-Microbit/pxt-leagueir#master"
     },
     "files": [
         "src/radiop.ts",

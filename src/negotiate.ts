@@ -121,7 +121,7 @@ namespace negotiate {
 
         radioIcon.showImage(0); // Show radio icon to indicate negotiation started
 
-        while (input.runningTime() - startTime < 3000) {
+        while (input.runningTime() - startTime < 5000) {
             if (negotiate.lastPayload) {
                 _onReceiveHandler = oldHandler; // Restore original handler
                
@@ -129,6 +129,8 @@ namespace negotiate {
                 basic.pause(100);
 
                 return false; // Channel is occupied
+            } else {
+                basic.pause(100); // Wait for a bit before checking again
             }
         }
     
@@ -140,13 +142,22 @@ namespace negotiate {
 
     }
 
+    /*
+    * Look for a free radio channel. First use a channel + group derived from the
+    * machine id, and if that is occupied, randomly check a channel and group for
+    * HereIAm messages from other senders.
+    * If no messages are received within 5 seconds, return the channel and group.
+    * */
+    
     export function findFreeChannel(): number[] {
         let i = 0;
 
+        /* channel and group based on the scrambled machine id,
+        * so the initial request will always be the same. */
+        let [channel, group] = lib.getInitialRadioRequest();
+
         serial.writeLine("Finding free radio channel...");
         while (true) {
-            let channel = 7;  //randint(0, 83);
-            let group = 1;  //randint(0, 255);
 
             if (testChannel(i, channel, group)) {
                 // Return both channel and group as an array
@@ -158,10 +169,28 @@ namespace negotiate {
                 return [channel, group];
             }
 
+            channel = randint(0, 83);
+            group = randint(0, 255);
+
+
             i++;
 
         }
         return [-1, -1]; // No free channel found
+    }
+
+    /* Send a hello IR message on the given pin to signal to the recipient that we want
+    to negotiate a radio channel. */
+
+    export function sendIRRadioMessage(pin: DigitalPin, channel: number , group: number): void {
+        let command = (channel << 8) | group;
+        leagueir.sendCommand(pin, leagueir.Address.RadioChannel, command);
+    }
+
+    export function recieveIrMessages(pin: DigitalPin) {
+        leagueir.onIrPacketReceived(pin, function (id: number, status: number, command: number, value: number) {
+
+        });
     }
 
 }
