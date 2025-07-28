@@ -6,8 +6,20 @@
 //% color=#0066CC weight=95 icon="\uf11b" blockNamespace="Radio Ext"
 namespace radiop {
 
+    export const CHANNEL_MIN = negotiate.BROADCAST_CHANNEL + 1; // Minimum channel number
+    export const CHANNEL_MAX = 100; // Maximum channel number
+    export const GROUP_MIN = negotiate.BROADCAST_GROUP + 1; // Minimum group number
+    export const GROUP_MAX = 255; // Maximum group number
+
     let _group: number = negotiate.BROADCAST_GROUP;
     let _channel: number = negotiate.BROADCAST_CHANNEL;
+
+
+
+    export enum PayloadType {
+        JOY = 10,
+        HERE_I_AM = 11
+    }
 
     export function setGroup(group: number) {
         _group = group;
@@ -27,10 +39,7 @@ namespace radiop {
         return _channel;
     }
 
-    export enum PayloadType {
-        JOY = 10,
-        HERE_I_AM = 11
-    }
+
 
     let transmittingSerial: boolean = true;
     let initialized = false;
@@ -40,6 +49,12 @@ namespace radiop {
      * Base class for all radio payloads
      */
     export class RadioPayload {
+
+        readonly BYTE_POS_PACKET_TYPE = 0; // Position of packet type in the buffer
+        readonly BYTE_POS_PAYLOAD_START = 1; // Position of payload start in the buffer
+
+
+
         public packet: radio.RadioPacket = undefined; 
         protected buffer: Buffer;
         protected packetType: number;
@@ -47,7 +62,7 @@ namespace radiop {
         constructor(packetType: number, size: number) {
             this.packetType = packetType;
             this.buffer = control.createBuffer(size);
-            this.buffer.setNumber(NumberFormat.UInt8LE, 0, packetType);
+            this.buffer.setNumber(NumberFormat.UInt8LE, this.BYTE_POS_PACKET_TYPE, packetType);
         }
 
 
@@ -158,7 +173,8 @@ namespace radiop {
         radio.onReceivedBuffer(function (buffer: Buffer) {
             let payload = extractPayload(buffer);
             payload.packet = radio.lastPacket;
-            serial.writeLine(`oRB: ${payload.str} on channel ${getChannel()}, group ${getGroup()}`);
+            
+            //serial.writeLine(`oRB: ${payload.str} on channel ${getChannel()}, group ${getGroup()}`);
 
             if (!payload) return;
 

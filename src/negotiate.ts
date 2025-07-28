@@ -9,8 +9,8 @@ namespace negotiate {
 
     let _onReceiveHandler: (payload: HereIAm) => void = defaultOnReceiveHandler;
 
-    export const BROADCAST_CHANNEL = 10; // Default broadcast channel for HereIAm messages
-    export const BROADCAST_GROUP = 10; // Default broadcast group for HereIAm messages
+    export const BROADCAST_CHANNEL = 1; // Default broadcast channel for HereIAm messages
+    export const BROADCAST_GROUP = 1; // Default broadcast group for HereIAm messages
 
     export const radioIcon: Image = images.createImage(`
                                         # # # . .
@@ -93,25 +93,28 @@ namespace negotiate {
             this.classId = classId;
             this.group = group !== undefined ? group : radiop.getGroup();
             this.channel = channel !== undefined ? channel : radiop.getChannel();
+
+            const start = this.BYTE_POS_PAYLOAD_START;
             // Pack group and channel first
-            this.buffer.setNumber(NumberFormat.UInt16LE, 0, this.group);
-            this.buffer.setNumber(NumberFormat.UInt16LE, 2, this.channel);
+            this.buffer.setNumber(NumberFormat.UInt16LE, start, this.group);
+            this.buffer.setNumber(NumberFormat.UInt16LE, start + 2, this.channel);
             // Pack string length
             let strLen = Math.min(classId.length, HereIAm.MAX_PAYLOAD - 5);
-            this.buffer.setNumber(NumberFormat.UInt8LE, 4, strLen);
+            this.buffer.setNumber(NumberFormat.UInt8LE, start + 4, strLen);
             // Pack string bytes using setUint8
             for (let i = 0; i < strLen; ++i) {
-                this.buffer.setUint8(5 + i, classId.charCodeAt(i));
+                this.buffer.setUint8(start + 5 + i, classId.charCodeAt(i));
             }
         }
 
         static fromBuffer(buffer: Buffer): HereIAm {
-            let group = buffer.getNumber(NumberFormat.UInt16LE, 0);
-            let channel = buffer.getNumber(NumberFormat.UInt16LE, 2);
-            let strLen = buffer.getNumber(NumberFormat.UInt8LE, 4);
+            const start = 1; // RadioPayload.BYTE_POS_PAYLOAD_START is 1
+            let group = buffer.getNumber(NumberFormat.UInt16LE, start);
+            let channel = buffer.getNumber(NumberFormat.UInt16LE, start + 2);
+            let strLen = buffer.getNumber(NumberFormat.UInt8LE, start + 4);
             let chars = [];
             for (let i = 0; i < strLen; ++i) {
-                chars.push(buffer.getUint8(5 + i));
+                chars.push(buffer.getUint8(start + 5 + i));
             }
             let classId = "";
             for (let i = 0; i < chars.length; ++i) {
@@ -171,27 +174,25 @@ namespace negotiate {
         myClassId = classId;
         serial.writeLine(`Negotiation initialized for classId: ${myClassId}`);
 
-        initBeacon(); // Start broadcasting HereIAm messages
-    }
-
-    export function initBeacon() {
-
         let lastChannel: number = undefined
         let lastGroup: number = undefined
+        let bCountDown = 10;
 
         basic.forever(function () {
             let me = new HereIAm(myClassId);
             
-            me.send(); // Send to my private radio  
+            me.send(); // Send to my private radio 
+            serial.writeLine(`Sending HereIAm: ${me.str} on channel ${radiop.getChannel()}, group ${radiop.getGroup()}`);
 
             // If the channel or group has changed, broadcast the HereIAm message
             // to the broadcast channel and group
-            if (lastChannel !== radiop.getChannel() || lastGroup !== radiop.getGroup()) {
+            if (lastChannel !== radiop.getChannel() || lastGroup !== radiop.getGroup() || bCountDown <= 0) {
                 lastChannel = radiop.getChannel();
                 lastGroup = radiop.getGroup();
-                serial.writeLine(`Broadcasting HereIAm on channel ${lastChannel}, group ${lastGroup}`);
                 broadcastHereIAm(me);
+                bCountDown = 10; // Reset countdown
             }
+            bCountDown--;
             basic.pause(1000);
         });
         

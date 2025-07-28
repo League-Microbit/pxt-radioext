@@ -43,8 +43,11 @@ namespace relib {
         let machineId = control.deviceSerialNumber();
         let scrambledId = murmur_32_scramble(machineId);
 
-        let channel = ( (scrambledId & 0x0FFFF000) >> 12) % 84; // 0-83
-        let group = scrambledId & 0xFF; // 0-255
+        let c_range = radiop.CHANNEL_MAX - radiop.CHANNEL_MIN;
+        let channel = ((scrambledId & 0x0FFFF000) >> 12) % c_range + radiop.CHANNEL_MIN; // 0-83
+        
+        let g_range = radiop.GROUP_MAX - radiop.GROUP_MIN;
+        let group = (scrambledId & 0xFF) % g_range + radiop.GROUP_MIN; // 1-255
 
         return [channel, group];
     }

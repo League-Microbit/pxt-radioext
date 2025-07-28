@@ -36,7 +36,6 @@ namespace radioptest {
         negotiate.init('beacontester');
         
         while (true) {
-            negotiate.broadcastHereIAm(new negotiate.HereIAm('beacontester_b'));
             basic.pause(2000);
         }
 
@@ -56,7 +55,7 @@ namespace radioptest {
         basic.showIcon(IconNames.Happy);
 
         negotiate.onReceive((payload) => {
-            serial.writeLine("%TL Received: " + payload.str);
+            serial.writeLine("TL Received: " + payload.str + " on channel " + radiop.getChannel() + ", group " + radiop.getGroup());
         });
 
     }
