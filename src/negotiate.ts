@@ -8,7 +8,7 @@ namespace negotiate {
 
     let _onReceiveHandler: (payload: radiop.RadioPayload) => void = undefined;
 
-    let radioIcon: Image = images.createImage(`
+    export let radioIcon: Image = images.createImage(`
                                         # # # . .
                                         . . . # .
                                         # # . . #
