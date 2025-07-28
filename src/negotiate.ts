@@ -76,7 +76,7 @@ namespace negotiate {
         }
 
         get str(): string {
-            return `HereIaM(groupMemberNumber=${this.groupMemberNumber}, radioGroup=${this.radioGroup}, radioChannel=${this.radioChannel}, serial=0x${lib.toHex(this.serial)})`;
+            return `HereIaM(groupMemberNumber=${this.groupMemberNumber}, radioGroup=${this.radioGroup}, radioChannel=${this.radioChannel}, serial=0x${relib.toHex(this.serial)})`;
         }
 
         get handler(): (payload: HereIAm) => void {
@@ -154,7 +154,7 @@ namespace negotiate {
 
         /* channel and group based on the scrambled machine id,
         * so the initial request will always be the same. */
-        let [channel, group] = lib.getInitialRadioRequest();
+        let [channel, group] = relib.getInitialRadioRequest();
 
         serial.writeLine("Finding free radio channel...");
         while (true) {
