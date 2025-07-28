@@ -9,8 +9,8 @@ namespace negotiate {
 
     let _onReceiveHandler: (payload: HereIAm) => void = defaultOnReceiveHandler;
 
-    export const BROADCAST_CHANNEL = 1; // Default broadcast channel for HereIAm messages
-    export const BROADCAST_GROUP = 2; // Default broadcast group for HereIAm messages
+    export const BROADCAST_CHANNEL = 10; // Default broadcast channel for HereIAm messages
+    export const BROADCAST_GROUP = 1; // Default broadcast group for HereIAm messages
 
     export const radioIcon: Image = images.createImage(`
                                         # # # . .
@@ -156,10 +156,11 @@ namespace negotiate {
     export function broadcastHereIAm(hia: HereIAm) {
         let origChannel = radiop.getChannel();
         let origGroup = radiop.getGroup();
-        serial.writeLine(`Broadcasting HereIAm: ${hia.str} on channel ${BROADCAST_CHANNEL}, group ${BROADCAST_GROUP}`);
         radiop.setChannel(BROADCAST_CHANNEL);
         radiop.setGroup(BROADCAST_GROUP);
         hia.send(); 
+        serial.writeLine(`Broadcasting HereIAm: ${hia.str} on channel ${radiop.getChannel()}, group ${radiop.getGroup()}`);
+
         radiop.setChannel(origChannel);
         radiop.setGroup(origGroup);
         basic.pause(100); // Allow some time for the message to be sent
