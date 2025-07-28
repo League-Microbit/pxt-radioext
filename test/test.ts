@@ -8,7 +8,8 @@ serial.writeLine("Starting RadioExt tests...");
 
 
 //radioptest.testBeacon();
-//radioptest.testListen();
+
+radioptest.testListen();
 
 basic.forever(() => {
     basic.pause(1000);

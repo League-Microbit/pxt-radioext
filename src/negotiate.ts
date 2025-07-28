@@ -135,16 +135,19 @@ namespace negotiate {
 
     export function defaultOnReceiveHandler(payload: HereIAm, handler?: (payload: HereIAm) => void) {
         lastPayload = payload;
+       
         addPeerRecord(payload.serial, payload.classId,
             radiop.getGroup(), radiop.getChannel());
         
-        if (handler === undefined) {
+        if (handler) {
             handler(payload);
         }
     }
 
-    export function onReceive(handler: (payload: HereIAm, handler: (payload: HereIAm) => void) => void) {
-        _onReceiveHandler = defaultOnReceiveHandler
+    export function onReceive(handler: (payload: HereIAm) => void) {
+        _onReceiveHandler = function (payload: HereIAm) {
+            defaultOnReceiveHandler(payload, handler);
+        };
     }
 
 
@@ -164,13 +167,18 @@ namespace negotiate {
     export function init(classId: string){
         radiop.init();
         myClassId = classId;
-        let lastChannel: number = undefined
-        let lastGroup: number = undefined
-        
+
         serial.writeLine(`Negotiation initialized for classId: ${myClassId}`);
 
+    }
+
+    export function initBeacon() {
+
+        let lastChannel: number = undefined
+        let lastGroup: number = undefined
+
         basic.forever(function () {
-            let me = new HereIAm(classId);
+            let me = new HereIAm(myClassId);
             
             me.send(); // Send to my private radio  
 
@@ -184,6 +192,7 @@ namespace negotiate {
             }
             basic.pause(1000);
         });
+        
     }
 
     /* Look for traffic on a channel/group    */

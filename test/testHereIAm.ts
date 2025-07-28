@@ -50,7 +50,10 @@ namespace radioptest {
     }
 
     export function testListen() {
+        
         radiop.init();
+        basic.showIcon(IconNames.Happy);
+
         negotiate.onReceive((payload) => {
             serial.writeLine("Received: " + payload.str);
         });

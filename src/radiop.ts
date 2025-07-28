@@ -135,10 +135,14 @@ namespace radiop {
      * @param power transmit power (default 7, range 0-7)
      */
     export function init( channel: number = 7,group: number = 1, power?: number) {
-        if (initialized) return;
+        if (initialized) {
+            serial.writeLine("Radio already initialized");
+            return;
+        }
         initialized = true;
 
         // Initialize radio
+        serial.writeLine(`Radio initialized on group ${group}, channel ${channel}`);
         setGroup(group);
         setChannel(channel);
         radio.setTransmitSerialNumber(true);
@@ -148,7 +152,7 @@ namespace radiop {
         } else {
             radio.setTransmitPower(7);
         }
-
+ 
         // Set up radio packet received handler
         radio.onReceivedBuffer(function (buffer: Buffer) {
             let payload = extractPayload(buffer);
@@ -158,6 +162,7 @@ namespace radiop {
 
             let handler = payload.handler;
 
+            
             if (handler) {
                 handler(payload);
             } else {
