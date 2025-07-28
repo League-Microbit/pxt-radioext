@@ -104,12 +104,12 @@ namespace negotiate {
 
     function testChannel(i: number, channel: number, group: number): Boolean {
 
-        serial.writeString(`${i} Testing channel ${channel} in group ${group}...\n`);
+        //serial.writeString(`${i} Testing channel ${channel} in group ${group}...\n`);
         radiop.setGroup(group);
         radiop.setChannel(channel);
 
         negotiate.lastPayload = null; // Reset lastPayload
-        serial.writeLine("Starting channel test handler = "+ _onReceiveHandler);
+        ///serial.writeLine("Starting channel test handler = "+ _onReceiveHandler);
 
         let oldHandler =  _onReceiveHandler; // Save old handler
 
@@ -158,12 +158,12 @@ namespace negotiate {
         * so the initial request will always be the same. */
         let [channel, group] = relib.getInitialRadioRequest();
 
-        serial.writeLine("Finding free radio channel...");
+        //serial.writeLine("Finding free radio channel...");
         while (true) {
 
             if (testChannel(i, channel, group)) {
                 // Return both channel and group as an array
-                serial.writeLine(`Found free radio channel ${channel} in group ${group}`);
+                //serial.writeLine(`Found free radio channel ${channel} in group ${group}`);
            
                 radiop.setGroup(group);
                 radiop.setChannel(channel);

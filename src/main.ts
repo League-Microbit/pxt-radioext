@@ -1,4 +1,4 @@
-serial.writeLine("Starting main");
+
 
 radiop.init();
 
