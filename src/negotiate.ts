@@ -211,8 +211,6 @@ namespace negotiate {
         _runBeacon = false;
     }
 
-    
-
     /* Look for traffic on a channel/group    */
 
     function testChannel(i: number, channel: number, group: number): Boolean {
