@@ -6,6 +6,7 @@ namespace negotiate {
 
     export let lastPayload: HereIAm = null;
     let myClassId: string = "unknown"; // Default class ID
+    let _runBeacon = true;
 
     let _onReceiveHandler: (payload: HereIAm) => void = defaultOnReceiveHandler;
 
@@ -179,24 +180,38 @@ namespace negotiate {
         let bCountDown = 10;
 
         basic.forever(function () {
-            let me = new HereIAm(myClassId);
+            if (_runBeacon) {
+                let me = new HereIAm(myClassId);
             
-            me.send(); // Send to my private radio 
-            serial.writeLine(`Sending HereIAm: ${me.str} on channel ${radiop.getChannel()}, group ${radiop.getGroup()}`);
+                me.send(); // Send to my private radio 
+                serial.writeLine(`Sending HereIAm: ${me.str} on channel ${radiop.getChannel()}, group ${radiop.getGroup()}`);
 
-            // If the channel or group has changed, broadcast the HereIAm message
-            // to the broadcast channel and group
-            if (lastChannel !== radiop.getChannel() || lastGroup !== radiop.getGroup() || bCountDown <= 0) {
-                lastChannel = radiop.getChannel();
-                lastGroup = radiop.getGroup();
-                broadcastHereIAm(me);
-                bCountDown = 10; // Reset countdown
+                // If the channel or group has changed, broadcast the HereIAm message
+                // to the broadcast channel and group
+                if (lastChannel !== radiop.getChannel() || lastGroup !== radiop.getGroup() || bCountDown <= 0) {
+                    lastChannel = radiop.getChannel();
+                    lastGroup = radiop.getGroup();
+                    broadcastHereIAm(me);
+                    bCountDown = 10; // Reset countdown
+                }
+                bCountDown--;
             }
-            bCountDown--;
-            basic.pause(1000);
+            basic.pause(3000);
         });
         
     }
+
+    /** Start the beacon loop */
+    export function startBeacon() {
+        _runBeacon = true;
+    }
+
+    /** Stop the beacon loop */
+    export function stopBeacon() {
+        _runBeacon = false;
+    }
+
+    
 
     /* Look for traffic on a channel/group    */
 
