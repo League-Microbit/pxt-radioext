@@ -82,7 +82,7 @@ namespace joystickp {
         let startTime = input.runningTime();
         
         // Collect samples for 1 second
-        basic.showIcon(IconNames.Target);
+        basic.showIcon(IconNames.Sword);
         while (input.runningTime() - startTime < 1000) {
             xSum += pins.analogReadPin(JoystickBitPin.X);
             ySum += pins.analogReadPin(JoystickBitPin.Y);
