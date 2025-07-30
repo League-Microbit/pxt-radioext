@@ -184,18 +184,17 @@ namespace radiop {
 
             if (!payload) return;
 
-            let handler = payload.handler;
-
-            if (handler) {
+            // Handler specific to the payload type
+            if (payload.handler) {
                 //serial.writeLine("oRB handler");
-                handler(payload);
-            } else if (payloadHandler) {
+                payload.handler(payload);
+            }
+            
+            // Global payload handler if set
+            if (payloadHandler) {
                 //serial.writeLine("ORB payloadHandler");
                 payloadHandler(payload);
-            } else {
-                serial.writeLine(`oRB: ${payload.str} on channel ${getChannel()}, group ${getGroup()}`);
-
-            }
+            } 
         });
 
     }

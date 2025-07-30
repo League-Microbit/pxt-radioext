@@ -34,7 +34,7 @@ namespace radioptest {
 
     export function testBeacon() {
 
-        radiop.init(10, 10);
+        radiop.init(1, 1);
         negotiate.init('beacontester');
         
         while (true) {

@@ -227,26 +227,28 @@ namespace negotiate {
         let lastGroup: number = undefined
         let bCountDown = 10;
 
-        basic.forever(function () {
-            if (_runBeacon) {
-                let me = new HereIAm(myClassId);
+        control.inBackground(function () {
+            while (true) {
+                if (_runBeacon) {
+                    let me = new HereIAm(myClassId);
             
 
-                me.send(); // Send to my private radio 
+                    me.send(); // Send to my private radio 
                 
-                //serial.writeLine(`Sending HereIAm: ${me.str} on channel ${radiop.getChannel()}, group ${radiop.getGroup()}`);
+                    serial.writeLine(`Sending HereIAm: ${me.str} on channel ${radiop.getChannel()}, group ${radiop.getGroup()}`);
 
-                // If the channel or group has changed, broadcast the HereIAm message
-                // to the broadcast channel and group
-                if (lastChannel !== radiop.getChannel() || lastGroup !== radiop.getGroup() || bCountDown <= 0) {
-                    lastChannel = radiop.getChannel();
-                    lastGroup = radiop.getGroup();
-                    broadcastHereIAm(me);
-                    bCountDown = 10; // Reset countdown
+                    // If the channel or group has changed, broadcast the HereIAm message
+                    // to the broadcast channel and group
+                    if (lastChannel !== radiop.getChannel() || lastGroup !== radiop.getGroup() || bCountDown <= 0) {
+                        lastChannel = radiop.getChannel();
+                        lastGroup = radiop.getGroup();
+                        broadcastHereIAm(me);
+                        bCountDown = 10; // Reset countdown
+                    }
+                    bCountDown--;
                 }
-                bCountDown--;
+                basic.pause(3000);
             }
-            basic.pause(3000);
         });
         
     }
