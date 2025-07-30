@@ -2,7 +2,9 @@ let memberNumber = 0;
 
 namespace radioptest {
     export function testHereIAm() {
-        radiop.init();
+        serial.writeLine("Test HereIAm");
+
+        radiop.init(1,1);
 
         for (let i = 0; i < 10; ++i) {
             // Create HereIaM with current member number, default group/channel

@@ -4,8 +4,9 @@ serial.writeLine("Starting RadioExt tests...");
 
 //radioptest.testJoystick();
 
-//radioptest.testHereIAm();
-radioptest.testRecvPayload();
+radioptest.testHereIAm();
+
+//radioptest.testRecvPayload();
 
 // radioptest.testFindChannel();
 
