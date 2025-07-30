@@ -5,7 +5,6 @@ namespace radioptest {
     let lastRateUpdate = 0;
     let messagesPerSecond = 0;
 
-
     export function testRecvPayload() {
 
         radiop.init(1,1)

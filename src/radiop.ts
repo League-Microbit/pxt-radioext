@@ -176,18 +176,20 @@ namespace radiop {
             radio.setTransmitPower(7);
         }
  
+        
         // Set up radio packet received handler
         radio.onReceivedBuffer(function (buffer: Buffer) {
             let payload = extractPayload(buffer);
-            payload.packet = radio.lastPacket;
-            
 
             if (!payload) return;
 
+            payload.packet = radio.lastPacket;
+            
             // Handler specific to the payload type
-            if (payload.handler) {
+            let handler = payload.handler;
+            if (handler) {
                 //serial.writeLine("oRB handler");
-                payload.handler(payload);
+                handler(payload);
             }
             
             // Global payload handler if set
