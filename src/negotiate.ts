@@ -51,7 +51,7 @@ namespace negotiate {
 
 
         str(): string {
-            return `PeerRecord(serial=${relib.toHex(this.serial)}, classId=${this.classId}, group=${this.radioGroup}, channel=${this.radioChannel}, lastSeen=${this.lastSeen})`;
+            return `PeerRecord(${this.hash()} serial=${relib.toHex(this.serial)}, classId=${this.classId}, group=${this.radioGroup}, channel=${this.radioChannel}, lastSeen=${this.lastSeen})`;
         }
     }
 
@@ -74,6 +74,16 @@ namespace negotiate {
             return undefined;
         }
 
+
+        findPeerByClassId(classId: string): PeerRecord {
+            for (let peer of this._peers) {
+                if (peer.classId == classId) {
+                    return peer;
+                }
+            }
+            return null;
+        }
+
         addPeerRecord(serialId: number, classId: string, radioGroup?: number, radioChannel?: number): PeerRecord {
             let peer = this.findPeerBySerial(serialId);
 
@@ -88,19 +98,11 @@ namespace negotiate {
             peer.radioChannel = radioChannel !== undefined ? radioChannel : radiop.getChannel();
             peer.lastSeen = input.runningTime();
             if (peer.hash() !== hash) {
-                serial.writeLine(`Peer added/updated: ${peer.str()}`);
+                serial.writeLine(`Peer update:  ${peer.str()}`);
             }
             return peer;
         }
 
-        findPeerByClassId(classId: string): PeerRecord {
-            for (let peer of this._peers) {
-                if (peer.classId == classId) {
-                    return peer;
-                }
-            }
-            return null;
-        }
 
         clearPeers() {
             this._peers = [];

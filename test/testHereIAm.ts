@@ -44,7 +44,7 @@ namespace radioptest {
     export function testFindChannel() {
         
         radiop.init();
-        negotiate.init('cutebot');
+        negotiate.init('joystick');
         negotiate.findFreeChannel()
 
     }
