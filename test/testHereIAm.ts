@@ -49,7 +49,7 @@ namespace radioptest {
 
     }
 
-    export function testListen() {
+    export function testListenNegotiate() {
         
         radiop.init();
         basic.showIcon(IconNames.Happy);

@@ -254,15 +254,18 @@ namespace joystickp {
     //% blockId=joystick_send_if_changed block="send joystick state if changed"
     //% group="Events"
     //% weight=70
-    export function sendIfChanged() {
+    export function sendIfChanged(): boolean {
+        
         let jp = JoyPayload.fromHardware();
-        if (_lastSentPayload && _lastSentPayload.hash != jp.hash) {
-            radio.sendBuffer(jp.getBuffer());
+
+        let hasChanged = ( !_lastSentPayload || _lastSentPayload.hash != jp.hash);
+        if ( hasChanged) {
+            jp.send();
         }
         _lastSentPayload = jp;
+
+        return hasChanged;
     }
-
-
 
     /**
      * Run code when a joystick message is received

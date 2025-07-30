@@ -181,20 +181,20 @@ namespace radiop {
             let payload = extractPayload(buffer);
             payload.packet = radio.lastPacket;
             
-            //serial.writeLine(`oRB: ${payload.str} on channel ${getChannel()}, group ${getGroup()}`);
 
             if (!payload) return;
 
             let handler = payload.handler;
 
             if (handler) {
+                serial.writeLine("oRB handler");
                 handler(payload);
+            } else if (payloadHandler) {
+                serial.writeLine("ORB payloadHandler");
+                payloadHandler(payload);
             } else {
-                // If no specific handler, use the global payload handler
-                // if it exists
-                if (payloadHandler) {
-                    payloadHandler(payload);
-                }
+                serial.writeLine(`oRB: ${payload.str} on channel ${getChannel()}, group ${getGroup()}`);
+
             }
         });
 

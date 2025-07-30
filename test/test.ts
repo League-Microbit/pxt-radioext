@@ -2,11 +2,12 @@
 serial.writeLine("=====================================");
 serial.writeLine("Starting RadioExt tests...");
 
-//testJoystick();
-//radioptest.testHereIAm();
-//testReceivePayload();
+//radioptest.testJoystick();
 
-radioptest.testFindChannel();
+//radioptest.testHereIAm();
+radioptest.testRecvPayload();
+
+// radioptest.testFindChannel();
 
 
 //radioptest.testBeacon();

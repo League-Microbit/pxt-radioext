@@ -1,20 +1,33 @@
 
-
-function testJoystick() {
-    // Initialize radiop
-    radiop.init();
-
-    // Initialize joystick
-    joystickp.init();
+namespace radioptest {
 
 
-    // Main test loop
+    
+    export function testJoystick() {
 
-    basic.forever(function () {
+        serial.writeLine("Test joystick setup")
 
-        //joystickp.sendIfChanged();
+        // Initialize radiop
+        radiop.init(1, 1);
+       
+        // Initialize joystick
+        joystickp.init();
 
-    });
+        let sendCounter = 80;
+        basic.forever(function () {
+            
+            let changed = joystickp.sendIfChanged();
 
+            if (changed) {
+                serial.writeString('.')
+                sendCounter--
+                if (sendCounter <= 0) {
+                    serial.writeLine(" ");
+                    sendCounter = 80;
+                }
+            }
+            pause(20);
+
+        });
+    }
 }
-
