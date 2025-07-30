@@ -187,10 +187,10 @@ namespace radiop {
             let handler = payload.handler;
 
             if (handler) {
-                serial.writeLine("oRB handler");
+                //serial.writeLine("oRB handler");
                 handler(payload);
             } else if (payloadHandler) {
-                serial.writeLine("ORB payloadHandler");
+                //serial.writeLine("ORB payloadHandler");
                 payloadHandler(payload);
             } else {
                 serial.writeLine(`oRB: ${payload.str} on channel ${getChannel()}, group ${getGroup()}`);

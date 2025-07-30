@@ -129,9 +129,15 @@ namespace joystickp {
          */
         static fromBuffer(buffer: Buffer): JoyPayload {
             // Extract values from buffer
-            let x = buffer.getNumber(NumberFormat.UInt16LE, 1);
-            let y = buffer.getNumber(NumberFormat.UInt16LE, 3);
-            
+            let x = Math.abs(buffer.getNumber(NumberFormat.UInt16LE, 1));
+            let y = Math.abs(buffer.getNumber(NumberFormat.UInt16LE, 3));
+
+            // There was a negative somewhere ...
+            if (x > 65000) x = 0; // Clamp to valid range
+            if (x > 1023) x = 1023; // Clamp to valid range
+            if (y > 65000) y = 0; // Clamp to valid range
+            if (y > 1023) y = 1023; // Clamp to valid range
+
             // Extract button bits
             let buttonBits = buffer.getNumber(NumberFormat.UInt8LE, 5);
             let buttons: number[] = [];
@@ -159,9 +165,9 @@ namespace joystickp {
             let rawY = pins.analogReadPin(JoystickBitPin.Y);
             
             // Apply offsets to center the values
-            let x = rawX - jsXOffset;
-            let y = rawY - jsYOffset;
-            
+            let x = Math.abs(rawX - jsXOffset);
+            let y = Math.abs(rawY - jsYOffset);
+
             // Check if values are within deadzone and reset to center if so
             if (Math.abs(x - defaultCenter) <= jsDeadzone) {
                 x = defaultCenter;
@@ -190,8 +196,8 @@ namespace joystickp {
 
         private fromValues(x: number, y: number, buttons: number[], accelX: number, accelY: number, accelZ: number): void {
             // Store values
-            this.x = x;
-            this.y = y;
+            this.x = Math.abs(x);
+            this.y = Math.abs(y);
             this.buttons = buttons;
             this.accelX = accelX;
             this.accelY = accelY;
