@@ -48,7 +48,7 @@ namespace joystickp {
 
 
     // Joystickbit pins for joystick and buttons
-    enum JoystickBitPin {
+    export enum JoystickBitPin {
         C = DigitalPin.P12,
         D = DigitalPin.P13,
         E = DigitalPin.P14,
