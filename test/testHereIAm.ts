@@ -44,7 +44,7 @@ namespace radioptest {
     export function testFindChannel() {
         
         radiop.init();
-
+        negotiate.init('cutebot');
         negotiate.findFreeChannel()
 
     }
@@ -56,6 +56,7 @@ namespace radioptest {
 
         negotiate.onReceive((payload) => {
             serial.writeLine("TL Received: " + payload.str + " on channel " + radiop.getChannel() + ", group " + radiop.getGroup());
+            negotiate.peerDb.dumpToSerial();
         });
 
     }

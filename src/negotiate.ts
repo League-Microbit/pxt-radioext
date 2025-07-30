@@ -27,54 +27,102 @@ namespace negotiate {
         public radioChannel: number;
         public classId: string; // Class ID of the peer, like 'joystick' or 'robot'
         public lastSeen: number; // Timestamp of last seen
+
+        constructor() {
+            this.serial = 0;
+            this.radioGroup = 0;
+            this.radioChannel = 0;
+            this.classId = "";
+            this.lastSeen = 0;
+        }
+
+        hash(): number {
+            let hash = 0;
+            hash ^= this.serial;
+            hash ^= this.radioGroup << 8;
+            hash ^= this.radioChannel << 16;
+            for (let i = 0; i < this.classId.length; i++) {
+                hash ^= this.classId.charCodeAt(i) << (i % 32);
+            }
+            //hash ^= this.lastSeen << 24;
+            return hash >>> 0; // Ensure unsigned
+        }
+
+
+
+        str(): string {
+            return `PeerRecord(serial=${relib.toHex(this.serial)}, classId=${this.classId}, group=${this.radioGroup}, channel=${this.radioChannel}, lastSeen=${this.lastSeen})`;
+        }
     }
 
-    // Store peer records
-    let _peers: PeerRecord[] = [];
 
-    /**
-     * Find the first peer by serial.
-     */
-    export function findPeerBySerial(serial: number): PeerRecord {
-        for (let peer of _peers) {
-            if (peer.serial == serial) {
-                return peer;
+    export class PeerDb {
+
+        private _peers: PeerRecord[] = [];
+
+
+        constructor() {
+            this._peers = [];
+        }
+
+        findPeerBySerial(serial: number): PeerRecord {
+            for (let peer of this._peers) {
+                if (peer.serial == serial) {
+                    return peer;
+                }
+            }
+            return undefined;
+        }
+
+        addPeerRecord(serialId: number, classId: string, radioGroup?: number, radioChannel?: number): PeerRecord {
+            let peer = this.findPeerBySerial(serialId);
+
+            if (!peer) {
+                peer = new PeerRecord();
+                peer.serial = serialId;
+                this._peers.push(peer);
+            }
+            let hash = peer.hash();
+            peer.classId = classId;
+            peer.radioGroup = radioGroup !== undefined ? radioGroup : radiop.getGroup();
+            peer.radioChannel = radioChannel !== undefined ? radioChannel : radiop.getChannel();
+            peer.lastSeen = input.runningTime();
+            if (peer.hash() !== hash) {
+                serial.writeLine(`Peer added/updated: ${peer.str()}`);
+            }
+            return peer;
+        }
+
+        findPeerByClassId(classId: string): PeerRecord {
+            for (let peer of this._peers) {
+                if (peer.classId == classId) {
+                    return peer;
+                }
+            }
+            return null;
+        }
+
+        clearPeers() {
+            this._peers = [];
+        }
+
+        getAllPeers(): PeerRecord[] {
+            return this._peers;
+        }
+
+        size(): number {
+            return this._peers.length;
+        }
+
+        dumpToSerial() {
+            serial.writeLine("Peers in database:");
+            for (let peer of this._peers) {
+                serial.writeLine("   "+peer.str());
             }
         }
-        return null;
     }
 
-    /**
-     * Add a peer record. radioGroup and radioChannel are optional; if not set,
-     * use radiop.getGroup() and radiop.getChannel().
-     */
-    export function addPeerRecord(serial: number, classId: string, radioGroup?: number, radioChannel?: number): PeerRecord {
-        let peer = findPeerBySerial(serial);
-        if (!peer) {
-            peer = new PeerRecord();
-            peer.serial = serial;
-            _peers.push(peer);
-        }
-
-        peer.classId = classId;
-        peer.radioGroup = radioGroup !== undefined ? radioGroup : radiop.getGroup();
-        peer.radioChannel = radioChannel !== undefined ? radioChannel : radiop.getChannel();
-        peer.lastSeen = input.runningTime();
-        return peer;
-    }
-
-    /**
-     * Find the first peer by classId.
-     */
-    export function findPeerByClassId(classId: string): PeerRecord {
-        for (let peer of _peers) {
-            if (peer.classId == classId) {
-                return peer;
-            }
-        }
-        return null;
-    }
-
+    export const peerDb = new PeerDb();
     
     export class HereIAm extends radiop.RadioPayload {
         public group: number;
@@ -139,10 +187,8 @@ namespace negotiate {
 
     export function defaultOnReceiveHandler(payload: HereIAm, handler?: (payload: HereIAm) => void) {
         lastPayload = payload;
-       
-        addPeerRecord(payload.serial, payload.classId,
+        peerDb.addPeerRecord(payload.serial, payload.classId,
             radiop.getGroup(), radiop.getChannel());
-        
         if (handler) {
             handler(payload);
         }
@@ -163,7 +209,7 @@ namespace negotiate {
         radiop.setChannel(BROADCAST_CHANNEL);
         radiop.setGroup(BROADCAST_GROUP);
         hia.send(); 
-        serial.writeLine(`Broadcasting HereIAm: ${hia.str} on channel ${radiop.getChannel()}, group ${radiop.getGroup()}`);
+        //serial.writeLine(`Broadcasting HereIAm: ${hia.str} on channel ${radiop.getChannel()}, group ${radiop.getGroup()}`);
 
         radiop.setChannel(origChannel);
         radiop.setGroup(origGroup);
@@ -183,8 +229,10 @@ namespace negotiate {
             if (_runBeacon) {
                 let me = new HereIAm(myClassId);
             
+
                 me.send(); // Send to my private radio 
-                serial.writeLine(`Sending HereIAm: ${me.str} on channel ${radiop.getChannel()}, group ${radiop.getGroup()}`);
+                
+                //serial.writeLine(`Sending HereIAm: ${me.str} on channel ${radiop.getChannel()}, group ${radiop.getGroup()}`);
 
                 // If the channel or group has changed, broadcast the HereIAm message
                 // to the broadcast channel and group
@@ -211,32 +259,30 @@ namespace negotiate {
         _runBeacon = false;
     }
 
-    /* Look for traffic on a channel/group    */
+    /* Look for traffic on a channel/group. Assumes the beacon is running
+    * and is collecting HearIAm into the PeerDb.     */
 
     function testChannel(i: number, channel: number, group: number): Boolean {
 
-        //serial.writeString(`${i} Testing channel ${channel} in group ${group}...\n`);
-        radiop.setGroup(group);
+        serial.writeLine(`${i} Testing c${channel} in g ${group}`);
+        radiop.setGroup(group);  // clears the PeerDb. 
         radiop.setChannel(channel);
-
-        negotiate.lastPayload = null; // Reset lastPayload
-        ///serial.writeLine("Starting channel test handler = "+ _onReceiveHandler);
-
 
         let startTime = input.runningTime();
 
         radioIcon.showImage(0); // Show radio icon to indicate negotiation started
-
+        
+        // Poll the PeerDb for up to 5 seconds
         while (input.runningTime() - startTime < 5000) {
-            if (negotiate.lastPayload) {
+            let peer: PeerRecord = peerDb.findPeerByClassId(myClassId);
 
+            if (peer) {
+                serial.writeLine(`Found same-class peer ${peer.str()} in C: ${peer.radioChannel} G: ${peer.radioGroup}, `);
                 basic.showIcon(IconNames.No);
-                basic.pause(100);
-
-                return false; // Channel is occupied
-            } else {
-                basic.pause(100); // Wait for a bit before checking again
+                return false;
             }
+          
+            basic.pause(200);
         }
 
         basic.showIcon(IconNames.Yes);
@@ -260,12 +306,12 @@ namespace negotiate {
         * so the initial request will always be the same. */
         let [channel, group] = relib.getInitialRadioRequest();
 
-        //serial.writeLine("Finding free radio channel...");
+        serial.writeLine("Finding free radio channel...");
         while (true) {
 
             if (testChannel(i, channel, group)) {
                 // Return both channel and group as an array
-                //serial.writeLine(`Found free radio channel ${channel} in group ${group}`);
+                serial.writeLine(`Found free radio channel ${channel} in group ${group}`);
            
                 radiop.setGroup(group);
                 radiop.setChannel(channel);
@@ -275,7 +321,6 @@ namespace negotiate {
 
             channel = randint(0, 83);
             group = randint(0, 255);
-
 
             i++;
 

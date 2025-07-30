@@ -22,7 +22,10 @@ namespace radiop {
     }
 
     export function setGroup(group: number) {
-        _group = group;
+        if (group != _group) {
+            _group = group;
+            negotiate.peerDb.clearPeers(); // Clear peers when group changes
+        }
         radio.setGroup(group);
     }
 
@@ -31,7 +34,11 @@ namespace radiop {
     }
 
     export function setChannel(channel: number) {
-        _channel = channel;
+        if (channel != _channel) {
+            negotiate.peerDb.clearPeers(); // Clear peers when channel changes
+            _channel = channel;
+        }
+        
         radio.setFrequencyBand(channel);
     }
 
