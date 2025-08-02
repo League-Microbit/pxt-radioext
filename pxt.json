@@ -1,6 +1,7 @@
 {
-    "name": "Radio Ext",
-    "description": "",
+    "name": "radioext",
+    "version": "0.20250802.1",
+    "description": "Extends the radio functionality of the micro:bit with joystick support and broadcasting.",
     "dependencies": {
         "core": "*",
         "radio": "*",
