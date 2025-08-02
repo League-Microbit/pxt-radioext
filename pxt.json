@@ -18,10 +18,6 @@
         "src/main.ts"
     ],
     "testFiles": [
-        "test/test.ts",
-        "test/testHereIAm.ts",
-        "test/testJoystick.ts",
-        "test/testRadiop.ts"
     ],
     "targetVersions": {
         "target": "8.0.11",
