@@ -8,9 +8,9 @@ namespace radioptest {
 
         for (let i = 0; i < 10; ++i) {
             // Create HereIaM with current member number, default group/channel
-            let h1 = new negotiate.HereIAm('footester_' + i);
+            let h1 = new radiop.HereIAm('footester_' + i);
             // Reconstruct from buffer
-            let h2 = negotiate.HereIAm.fromBuffer(h1.getBuffer());
+            let h2 = radiop.HereIAm.fromBuffer(h1.getBuffer());
 
             // Compare hashes and show status
             if (h1.hash === h2.hash) {
@@ -35,7 +35,7 @@ namespace radioptest {
     export function testBeacon() {
 
         radiop.init(1, 1);
-        negotiate.init('beacontester');
+        radiop.init('beacontester');
         
         while (true) {
             basic.pause(2000);
@@ -46,8 +46,8 @@ namespace radioptest {
     export function testFindChannel() {
         
         radiop.init();
-        negotiate.init('joystick');
-        negotiate.findFreeChannel()
+        radiop.init('joystick');
+        radiop.findFreeChannel()
 
     }
 
@@ -56,9 +56,9 @@ namespace radioptest {
         radiop.init();
         basic.showIcon(IconNames.Happy);
 
-        negotiate.onReceive((payload) => {
+        radiop.onReceive((payload) => {
             serial.writeLine("TL Received: " + payload.str + " on channel " + radiop.getChannel() + ", group " + radiop.getGroup());
-            negotiate.peerDb.dumpToSerial();
+            radiop.peerDb.dumpToSerial();
         });
 
     }

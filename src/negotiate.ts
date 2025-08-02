@@ -2,7 +2,7 @@
 *
  */
 
-namespace negotiate {
+namespace radiop {
 
     export let lastPayload: HereIAm = null;
     let myClassId: string = "unknown"; // Default class ID
@@ -218,7 +218,7 @@ namespace negotiate {
         basic.pause(100); // Allow some time for the message to be sent
     }
 
-    export function init(classId: string){
+    export function init_beacon(classId: string){
         radiop.init();
         myClassId = classId;
         serial.writeLine(`Negotiation initialized for classId: ${myClassId}`);

@@ -6,13 +6,13 @@
 //% color=#0066CC weight=95 icon="\uf11b" blockNamespace="Radio Ext"
 namespace radiop {
 
-    export const CHANNEL_MIN = negotiate.BROADCAST_CHANNEL + 1; // Minimum channel number
+    export const CHANNEL_MIN = radiop.BROADCAST_CHANNEL + 1; // Minimum channel number
     export const CHANNEL_MAX = 100; // Maximum channel number
-    export const GROUP_MIN = negotiate.BROADCAST_GROUP + 1; // Minimum group number
+    export const GROUP_MIN = radiop.BROADCAST_GROUP + 1; // Minimum group number
     export const GROUP_MAX = 255; // Maximum group number
 
-    let _group: number = negotiate.BROADCAST_GROUP;
-    let _channel: number = negotiate.BROADCAST_CHANNEL;
+    let _group: number = radiop.BROADCAST_GROUP;
+    let _channel: number = radiop.BROADCAST_CHANNEL;
 
 
 
@@ -24,7 +24,7 @@ namespace radiop {
     export function setGroup(group: number) {
         if (group != _group) {
             _group = group;
-            negotiate.peerDb.clearPeers(); // Clear peers when group changes
+            radiop.peerDb.clearPeers(); // Clear peers when group changes
         }
         radio.setGroup(group);
     }
@@ -35,7 +35,7 @@ namespace radiop {
 
     export function setChannel(channel: number) {
         if (channel != _channel) {
-            negotiate.peerDb.clearPeers(); // Clear peers when channel changes
+            radiop.peerDb.clearPeers(); // Clear peers when channel changes
             _channel = channel;
         }
         
@@ -143,7 +143,7 @@ namespace radiop {
             case PayloadType.JOY:
                 return joystickp.JoyPayload.fromBuffer(buffer);
             case PayloadType.HERE_I_AM:
-                return negotiate.HereIAm.fromBuffer(buffer);
+                return radiop.HereIAm.fromBuffer(buffer);
         }
 
         return undefined;
@@ -156,8 +156,8 @@ namespace radiop {
      * @param channel radio channel (default 7)
      * @param power transmit power (default 7, range 0-7)
      */
-    export function init(channel: number = negotiate.BROADCAST_CHANNEL,
-                          group: number = negotiate.BROADCAST_GROUP, power?: number) {
+    export function init(channel: number = radiop.BROADCAST_CHANNEL,
+                          group: number = radiop.BROADCAST_GROUP, power?: number) {
         if (initialized) {
             serial.writeLine("Radio already initialized");
             return;
