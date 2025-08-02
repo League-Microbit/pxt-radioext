@@ -16,3 +16,12 @@ test:
 
 serve:
 	PXT_FORCE_LOCAL=1  pxt serve
+
+
+push: build 
+	git commit --allow-empty -a -m "Release version $(VERSION)"
+	git push
+	git tag v$(VERSION) 
+	git push --tags
+
+
