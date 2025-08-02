@@ -35,7 +35,7 @@ namespace radioptest {
     export function testBeacon() {
 
         radiop.init(1, 1);
-        radiop.init('beacontester');
+        radiop.initBeacon('beacontester');
         
         while (true) {
             basic.pause(2000);
@@ -46,7 +46,7 @@ namespace radioptest {
     export function testFindChannel() {
         
         radiop.init();
-        radiop.init('joystick');
+        radiop.initBeacon('joystick');
         radiop.findFreeChannel()
 
     }

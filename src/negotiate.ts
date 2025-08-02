@@ -7,6 +7,7 @@ namespace radiop {
     export let lastPayload: HereIAm = null;
     let myClassId: string = "unknown"; // Default class ID
     let _runBeacon = true;
+    let _beaconInit = false;
 
     let _onReceiveHandler: (payload: HereIAm) => void = defaultOnReceiveHandler;
 
@@ -218,7 +219,13 @@ namespace radiop {
         basic.pause(100); // Allow some time for the message to be sent
     }
 
-    export function init_beacon(classId: string){
+    export function initBeacon(classId: string) {
+        
+        if (_beaconInit) {
+            return;
+        }
+        _beaconInit = true;
+
         radiop.init();
         myClassId = classId;
         serial.writeLine(`Negotiation initialized for classId: ${myClassId}`);
@@ -255,6 +262,10 @@ namespace radiop {
 
     /** Start the beacon loop */
     export function startBeacon() {
+        if (!_beaconInit) {
+            serial.writeLine("Beacon not initialized. Call initBeacon first.");
+            return;
+        }
         _runBeacon = true;
     }
 
