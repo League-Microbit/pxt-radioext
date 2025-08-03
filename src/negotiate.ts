@@ -188,7 +188,7 @@ namespace radiop {
         }
     }
 
-    export function onReceive(handler: (payload: HereIAm) => void) {
+    export function onReceiveHereIAm(handler: (payload: HereIAm) => void) {
         _onReceiveHandler = function (payload: HereIAm) {
             defaultOnReceiveHandler(payload, handler);
         };
