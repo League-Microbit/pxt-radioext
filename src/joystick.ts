@@ -296,7 +296,7 @@ namespace radiop {
         radio.sendBuffer(payload.getBuffer());
     }   
 
-    //% blockId=joystick_value block="joystick %payload value %value"
+    //% blockId=joystick_value block="joystick $payload value $value"
     //% group="Joystick"
     //% weight=90
     export function getValue(payload: JoyPayload, value: JoystickValue): number {
