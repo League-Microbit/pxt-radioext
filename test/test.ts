@@ -1,6 +1,6 @@
 
-serial.writeLine("=====================================");
-serial.writeLine("Starting RadioExt tests...");
+//serial.writeLine("=====================================");
+//serial.writeLine("Starting RadioExt tests...");
 
 //radioptest.testJoystick();make deploy
 //radioptest.testHereIAm();
@@ -9,9 +9,9 @@ serial.writeLine("Starting RadioExt tests...");
 // radioptest.testFindChannel();
 //radioptest.testListen();
 
-radiop.init(1, 1)
-radiop.findFreeChannel()
+//radiop.init(1, 1)
+//radiop.findFreeChannel()
 
-while (true) {
-    basic.pause(100);
-}
+//while (true) {
+//    basic.pause(100);
+//}
