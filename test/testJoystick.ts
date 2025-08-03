@@ -1,8 +1,6 @@
 
 namespace radioptest {
 
-
-    
     export function testJoystick() {
 
         serial.writeLine("Test joystick setup")
@@ -11,12 +9,12 @@ namespace radioptest {
         radiop.init(1, 1);
        
         // Initialize joystick
-        joystickp.initJoystick();
+        radiop.initJoystick();
 
         let sendCounter = 80;
         basic.forever(function () {
             
-            let changed = joystickp.sendIfChanged();
+            let changed = radiop.sendIfChanged();
 
             if (changed) {
                 serial.writeString('.')

@@ -295,23 +295,19 @@ namespace radiop {
 
         let startTime = input.runningTime();
 
-        radioIcon.showImage(0); // Show radio icon to indicate negotiation started
-        
+
         // Poll the PeerDb for up to 5 seconds
         while (input.runningTime() - startTime < 5000) {
             let peer: PeerRecord = peerDb.findPeerByClassId(myClassId);
 
             if (peer) {
                 serial.writeLine(`Found same-class peer ${peer.str()} in C: ${peer.radioChannel} G: ${peer.radioGroup}, `);
-                basic.showIcon(IconNames.No);
+                
                 return false;
             }
-          
             basic.pause(200);
         }
 
-        basic.showIcon(IconNames.Yes);
-        basic.pause(100);
 
         return true;
 
@@ -333,7 +329,10 @@ namespace radiop {
         let [channel, group] = radiop.getInitialRadioRequest();
 
         serial.writeLine("Finding free radio channel...");
+            
+        
         while (true) {
+            radioIcon.showImage(0); // Show radio icon to indicate negotiation started
 
             if (testChannel(i, channel, group)) {
                 // Return both channel and group as an array
@@ -342,6 +341,9 @@ namespace radiop {
                 radiop.setGroup(group);
                 radiop.setChannel(channel);
                 basic.clearScreen();
+
+                basic.showIcon(IconNames.Yes);
+            
                 return;
             }
 
@@ -349,6 +351,9 @@ namespace radiop {
             group = randint(0, 255);
 
             i++;
+
+            basic.showIcon(IconNames.No);
+            basic.pause(200); // Pause to avoid flooding the radio with requests
 
         }
         return;

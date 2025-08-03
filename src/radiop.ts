@@ -175,10 +175,12 @@ namespace radiop {
     //% group="radio"
     export function init(channel: number = BROADCAST_CHANNEL,
         group: number = BROADCAST_GROUP, power: number = 7) {
+        
         if (initialized) {
             serial.writeLine("Radio already initialized");
             return;
         }
+        
         initialized = true;
 
         // Initialize radio

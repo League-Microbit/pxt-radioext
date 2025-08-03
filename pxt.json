@@ -1,11 +1,10 @@
 {
     "name": "radioext",
-    "version": "0.20250802.3",
+    "version": "0.20250803.1",
     "description": "Extends the radio functionality of the micro:bit with joystick support and broadcasting.",
     "dependencies": {
         "core": "*",
-        "radio": "*",
-        "radio-broadcast": "*"
+        "radio": "*"
     },
     "files": [
         "src/radiop.ts",
@@ -17,7 +16,9 @@
         "enums.d.ts",
         "src/main.ts"
     ],
-    "testFiles": [],
+    "testFiles": [
+        "test/test.ts"
+    ],
     "targetVersions": {
         "target": "8.0.13",
         "targetId": "microbit"
