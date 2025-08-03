@@ -3,11 +3,11 @@
 * 
 * JoyPayload - for joystick data including position, buttons, and accelerometer
 */
-//% color=#0066CC weight=95 icon="\uf11b" blockNamespace="Radio Ext"
+//% color=#0066CC weight=95 icon="\uf11b" 
 namespace radiop {
 
-    export const BROADCAST_CHANNEL = 1; // Default broadcast channel for HereIAm messages
-    export const BROADCAST_GROUP = 1; // Default broadcast group for HereIAm messages
+    export const BROADCAST_CHANNEL : number  = 1; // Default broadcast channel for HereIAm messages
+    export const BROADCAST_GROUP: number = 1; // Default broadcast group for HereIAm messages
 
     export const radioIcon: Image = images.createImage(`
                                         # # # . .
@@ -43,6 +43,7 @@ namespace radiop {
         }
         radio.setGroup(group);
     }
+
 
     export function getGroup(): number {
         return _group;
@@ -163,12 +164,17 @@ namespace radiop {
 
     /**
      * Initialize the radio for joystick payloads
-     * @param group radio group (default 1)
-     * @param channel radio channel (default 7)
-     * @param power transmit power (default 7, range 0-7)
+     * @param channel radio channel (default 1, range 1-100)
+     * @param group radio group (default 1, range 1-254)  
+     * @param power transmit power (default 7, range 1-7)
      */
-    export function init(channel: number = radiop.BROADCAST_CHANNEL,
-                          group: number = radiop.BROADCAST_GROUP, power?: number) {
+    //% blockId=radio_init block="initialize radio on channel $channel group $group power $power"
+    //% channel.min=1 channel.max=100 channel.defl=1
+    //% group.min=1 group.max=254 group.defl=1
+    //% power.min=1 power.max=7 power.defl=7
+    //% group="radio"
+    export function init(channel: number = BROADCAST_CHANNEL,
+        group: number = BROADCAST_GROUP, power: number = 7) {
         if (initialized) {
             serial.writeLine("Radio already initialized");
             return;
@@ -216,6 +222,7 @@ namespace radiop {
      * @param handler function to handle the payload
      */
     //% blockId=radio_on_payload block="on radio extended payload"
+    //% group="radio"
    export function onPayload(handler: (payload: RadioPayload) => void) {
        payloadHandler = handler;
    }

@@ -1,8 +1,7 @@
 /**
  * Joystick blocks for micro:bit
  */
-//% color=#0066CC weight=95 icon="\uf11b" blockNamespace="Joystick Radio"
-//% 
+
 namespace radiop {
 
     let _lastSentPayload: JoyPayload = null;
@@ -258,7 +257,7 @@ namespace radiop {
      * Send the current joystick state over radio only if it is different from the previous one
      */
     //% blockId=joystick_send_if_changed block="send joystick state if changed"
-    //% group="Events"
+    //% group="Joystick"
     //% weight=70
     export function sendIfChanged(): boolean {
         
@@ -277,7 +276,7 @@ namespace radiop {
      * Run code when a joystick message is received
      */
     //% blockId=joystick_on_receive block="on receive joystick"
-    //% group="Events"
+    //% group="Joystick"
     //% weight=100
     export function onReceiveJoystickMessage(handler: (payload: radiop.JoyPayload) => void) {
         radiop.init(); // Ensure radio is initialized
@@ -295,7 +294,7 @@ namespace radiop {
     }   
 
     //% blockId=joystick_value block="joystick %payload value %value"
-    //% group="Values"
+    //% group="Joystick"
     //% weight=90
     export function getValue(payload: JoyPayload, value: JoystickValue): number {
         if (!payload) return 0;
@@ -313,7 +312,7 @@ namespace radiop {
      * Check if a button is pressed
      */
     //% blockId=joystick_button_pressed block="joystick button %button pressed"
-    //% group="Values"
+    //% group="Joystick"
     //% weight=80
     export function buttonPressed(button: JoystickButton): boolean {
         if (!lastJoyPayload) return false;
@@ -325,6 +324,7 @@ namespace radiop {
      * Run the joystick functionality
      */
     //% blockId=joystick_run block="run joystick functionality"
+    //% group="Joystick"
     export function runJoystick() {
         radiop.init();
 
