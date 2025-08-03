@@ -6,6 +6,17 @@
 //% color=#0066CC weight=95 icon="\uf11b" blockNamespace="Radio Ext"
 namespace radiop {
 
+    export const BROADCAST_CHANNEL = 1; // Default broadcast channel for HereIAm messages
+    export const BROADCAST_GROUP = 1; // Default broadcast group for HereIAm messages
+
+    export const radioIcon: Image = images.createImage(`
+                                        # # # . .
+                                        . . . # .
+                                        # # . . #
+                                        . . # . #
+                                        # . # . #`);
+
+
     export const CHANNEL_MIN = radiop.BROADCAST_CHANNEL + 1; // Minimum channel number
     export const CHANNEL_MAX = 100; // Maximum channel number
     export const GROUP_MIN = radiop.BROADCAST_GROUP + 1; // Minimum group number
@@ -14,6 +25,10 @@ namespace radiop {
     let _group: number = radiop.BROADCAST_GROUP;
     let _channel: number = radiop.BROADCAST_CHANNEL;
 
+    let transmittingSerial: boolean = true;
+    let initialized = false;
+
+    let payloadHandler: (payload: RadioPayload) => void; // Handles any payload if no specific handler is set
 
 
     export enum PayloadType {
@@ -48,9 +63,6 @@ namespace radiop {
 
 
 
-    let transmittingSerial: boolean = true;
-    let initialized = false;
-    let payloadHandler: (payload: RadioPayload) => void; // Handles any payload if no specific handler is set
 
     /**
      * Base class for all radio payloads
@@ -132,7 +144,6 @@ namespace radiop {
             }
             return `RadioPayload(type=${this.packetType}, length=${this.payloadLength}, bytes=${spaced})`;
         }
-
     }
 
     /* Construct a payload from a buffer. This is the central
@@ -141,7 +152,7 @@ namespace radiop {
         let packetType = buffer.getNumber(NumberFormat.UInt8LE, 0);
         switch (packetType) {
             case PayloadType.JOY:
-                return joystickp.JoyPayload.fromBuffer(buffer);
+                return radiop.JoyPayload.fromBuffer(buffer);
             case PayloadType.HERE_I_AM:
                 return radiop.HereIAm.fromBuffer(buffer);
         }
@@ -176,7 +187,6 @@ namespace radiop {
             radio.setTransmitPower(7);
         }
  
-        
         // Set up radio packet received handler
         radio.onReceivedBuffer(function (buffer: Buffer) {
             let payload = extractPayload(buffer);

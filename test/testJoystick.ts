@@ -11,7 +11,7 @@ namespace radioptest {
         radiop.init(1, 1);
        
         // Initialize joystick
-        joystickp.init();
+        joystickp.initJoystick();
 
         let sendCounter = 80;
         basic.forever(function () {

@@ -1,5 +1,5 @@
 
-namespace relib {
+namespace radiop {
 
     /* Scramble the input using MurmurHash3. This can scramble the bits of the 
     * id of the Micro:bit, so we can use the last 12 for an id value. */

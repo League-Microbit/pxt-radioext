@@ -3,7 +3,7 @@
  */
 //% color=#0066CC weight=95 icon="\uf11b" blockNamespace="Joystick Radio"
 //% 
-namespace joystickp {
+namespace radiop {
 
     let _lastSentPayload: JoyPayload = null;
     export let lastJoyPayload: JoyPayload = null;
@@ -65,7 +65,7 @@ namespace joystickp {
     let jsYOffset = 0; // Offset for joystick Y
     let jsDeadzone = 10; // Deadzone for joystick movement
 
-    export function init(): void {
+    export function initJoystick(): void {
         if (joystickInitialize) return;
         joystickInitialize = true;
         pins.digitalWritePin(DigitalPin.P0, 0)
@@ -158,7 +158,7 @@ namespace joystickp {
          * Create a JoyPayload from current hardware state
          */
         static fromHardware(readAccelerometer: boolean = false): JoyPayload {
-            init()
+            initJoystick()
 
             // Read joystick X and Y from analog pins
             let rawX = pins.analogReadPin(JoystickBitPin.X);
@@ -279,7 +279,7 @@ namespace joystickp {
     //% blockId=joystick_on_receive block="on receive joystick"
     //% group="Events"
     //% weight=100
-    export function onReceive(handler: (payload: joystickp.JoyPayload) => void) {
+    export function onReceiveJoystickMessage(handler: (payload: radiop.JoyPayload) => void) {
         radiop.init(); // Ensure radio is initialized
         
         _onReceiveJoyHandler = function (payload: JoyPayload) {
@@ -290,7 +290,7 @@ namespace joystickp {
 
     export function sendJoyPayload(x: number, y: number, buttons: number[], accelX: number, accelY: number, accelZ: number): void {
         radiop.init();
-        let payload = new joystickp.JoyPayload(x, y, buttons, accelX, accelY, accelZ);
+        let payload = new radiop.JoyPayload(x, y, buttons, accelX, accelY, accelZ);
         radio.sendBuffer(payload.getBuffer());
     }   
 
@@ -325,11 +325,11 @@ namespace joystickp {
      * Run the joystick functionality
      */
     //% blockId=joystick_run block="run joystick functionality"
-    export function run() {
+    export function runJoystick() {
         radiop.init();
 
         basic.forever(function () {
-            joystickp.sendIfChanged();
+            radiop.sendIfChanged();
         });
 
         input.onButtonPressed(Button.AB, function () {

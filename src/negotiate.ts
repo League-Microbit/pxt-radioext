@@ -6,20 +6,13 @@ namespace radiop {
 
     export let lastPayload: HereIAm = null;
     let myClassId: string = "unknown"; // Default class ID
+    let hereIAm: HereIAm = null;  // Default HereIAm message
+
     let _runBeacon = true;
     let _beaconInit = false;
 
     let _onReceiveHandler: (payload: HereIAm) => void = defaultOnReceiveHandler;
 
-    export const BROADCAST_CHANNEL = 1; // Default broadcast channel for HereIAm messages
-    export const BROADCAST_GROUP = 1; // Default broadcast group for HereIAm messages
-
-    export const radioIcon: Image = images.createImage(`
-                                        # # # . .
-                                        . . . # .
-                                        # # . . #
-                                        . . # . #
-                                        # . # . #`);
 
     /* Record of a peer in the network */
     export class PeerRecord {
@@ -52,10 +45,9 @@ namespace radiop {
 
 
         str(): string {
-            return `PeerRecord(${this.hash()} serial=${relib.toHex(this.serial)}, classId=${this.classId}, group=${this.radioGroup}, channel=${this.radioChannel}, lastSeen=${this.lastSeen})`;
+            return `PeerRecord(${this.hash()} serial=${radiop.toHex(this.serial)}, classId=${this.classId}, group=${this.radioGroup}, channel=${this.radioChannel}, lastSeen=${this.lastSeen})`;
         }
     }
-
 
     export class PeerDb {
 
@@ -180,7 +172,7 @@ namespace radiop {
         }
 
         get str(): string {
-            return `HereIaM(classId=${this.classId}, group=${this.group}, channel=${this.channel}, serial=0x${relib.toHex(this.serial)})`;
+            return `HereIaM(classId=${this.classId}, group=${this.group}, channel=${this.channel}, serial=0x${radiop.toHex(this.serial)})`;
         }
 
         get handler(): (payload: HereIAm) => void {
@@ -204,9 +196,15 @@ namespace radiop {
     }
 
 
-    /* Send a HereIAm message to the broadcast channel and group */
-    //% blockId=broadcast_here_i_am block="broadcast HereIAm message"
-    export function broadcastHereIAm(hia: HereIAm) {
+    /**
+     * Send a HereIAm message to the broadcast channel and group 
+     */
+
+    export function broadcastHereIAm() {
+        _broadcastHereIAm(hereIAm);
+    }
+            
+    export function _broadcastHereIAm(hia: HereIAm) {
         let origChannel = radiop.getChannel();
         let origGroup = radiop.getGroup();
         radiop.setChannel(BROADCAST_CHANNEL);
@@ -219,6 +217,10 @@ namespace radiop {
         basic.pause(100); // Allow some time for the message to be sent
     }
 
+    /** Initialize the hereIAm Beacon
+     * @param classId The class ID to use for the HereIAm message
+     */
+    //% blockId=init_beacon block="initialize beacon with classId %classId"
     export function initBeacon(classId: string) {
         
         if (_beaconInit) {
@@ -228,6 +230,7 @@ namespace radiop {
 
         radiop.init();
         myClassId = classId;
+        hereIAm = new HereIAm(myClassId); 
         serial.writeLine(`Negotiation initialized for classId: ${myClassId}`);
 
         let lastChannel: number = undefined
@@ -237,19 +240,17 @@ namespace radiop {
         control.inBackground(function () {
             while (true) {
                 if (_runBeacon) {
-                    let me = new HereIAm(myClassId);
-            
-
-                    me.send(); // Send to my private radio 
+                    
+                    hereIAm.send(); // Send to my private radio 
                 
-                    serial.writeLine(`Sending HereIAm: ${me.str} on channel ${radiop.getChannel()}, group ${radiop.getGroup()}`);
+                    serial.writeLine(`Sending HereIAm: ${hereIAm.str} on channel ${radiop.getChannel()}, group ${radiop.getGroup()}`);
 
                     // If the channel or group has changed, broadcast the HereIAm message
                     // to the broadcast channel and group
                     if (lastChannel !== radiop.getChannel() || lastGroup !== radiop.getGroup() || bCountDown <= 0) {
                         lastChannel = radiop.getChannel();
                         lastGroup = radiop.getGroup();
-                        broadcastHereIAm(me);
+                        _broadcastHereIAm(hereIAm);
                         bCountDown = 10; // Reset countdown
                     }
                     bCountDown--;
@@ -260,7 +261,10 @@ namespace radiop {
         
     }
 
-    /** Start the beacon loop */
+    /** 
+     * Start the beacon loop 
+     */
+    //% blockId=start_beacon block="start beacon"
     export function startBeacon() {
         if (!_beaconInit) {
             serial.writeLine("Beacon not initialized. Call initBeacon first.");
@@ -269,7 +273,10 @@ namespace radiop {
         _runBeacon = true;
     }
 
-    /** Stop the beacon loop */
+    /** 
+     * Stop the beacon loop 
+     */
+    //% blockId=stop_beacon block="stop beacon"
     export function stopBeacon() {
         _runBeacon = false;
     }
@@ -319,7 +326,7 @@ namespace radiop {
 
         /* channel and group based on the scrambled machine id,
         * so the initial request will always be the same. */
-        let [channel, group] = relib.getInitialRadioRequest();
+        let [channel, group] = radiop.getInitialRadioRequest();
 
         serial.writeLine("Finding free radio channel...");
         while (true) {
