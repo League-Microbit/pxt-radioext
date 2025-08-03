@@ -338,7 +338,7 @@ namespace radiop {
             if (testChannel(i, channel, group)) {
                 // Return both channel and group as an array
                 serial.writeLine(`Found free radio channel ${channel} in group ${group}`);
-           
+ 
                 radiop.setGroup(group);
                 radiop.setChannel(channel);
                 basic.clearScreen();
