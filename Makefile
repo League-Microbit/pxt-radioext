@@ -1,3 +1,7 @@
+
+VERSION := $(shell grep '"version"' pxt.json | head -1 | sed -E 's/.*"version": *"([^"]+)".*/\1/')
+
+
 # Initial setup 
 setup: 
 	npm install -g pxt
