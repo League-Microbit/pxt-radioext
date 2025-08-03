@@ -217,6 +217,10 @@ namespace radiop {
 
     }
 
+    export function initDefaults(){
+        init(BROADCAST_CHANNEL, BROADCAST_GROUP, 7);
+    }
+
     /**
      * Set a global handler for any radio payload
      * @param handler function to handle the payload

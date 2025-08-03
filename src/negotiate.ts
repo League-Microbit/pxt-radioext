@@ -221,6 +221,7 @@ namespace radiop {
      * @param classId The class ID to use for the HereIAm message
      */
     //% blockId=init_beacon block="initialize beacon with classId %classId"
+    //% group='Beacon'
     export function initBeacon(classId: string) {
         
         if (_beaconInit) {
@@ -228,7 +229,7 @@ namespace radiop {
         }
         _beaconInit = true;
 
-        radiop.init();
+        radiop.initDefaults();
         myClassId = classId;
         hereIAm = new HereIAm(myClassId); 
         serial.writeLine(`Negotiation initialized for classId: ${myClassId}`);
@@ -265,6 +266,7 @@ namespace radiop {
      * Start the beacon loop 
      */
     //% blockId=start_beacon block="start beacon"
+    //% group='Beacon'
     export function startBeacon() {
         if (!_beaconInit) {
             serial.writeLine("Beacon not initialized. Call initBeacon first.");
@@ -277,6 +279,7 @@ namespace radiop {
      * Stop the beacon loop 
      */
     //% blockId=stop_beacon block="stop beacon"
+    //% group='Beacon'
     export function stopBeacon() {
         _runBeacon = false;
     }
@@ -321,6 +324,7 @@ namespace radiop {
     * If no messages are received within 5 seconds, return the channel and group.
     * */
     //% blockId=find_free_channel block="find free radio channel"
+    //% group='Beacon'
     export function findFreeChannel(): void {
         let i = 0;
 

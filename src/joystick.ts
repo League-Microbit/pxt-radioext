@@ -259,6 +259,9 @@ namespace radiop {
     //% blockId=joystick_send_if_changed block="send joystick state if changed"
     //% group="Joystick"
     //% weight=70
+    export function sendIfChanged_(): void {
+        sendIfChanged();
+    }
     export function sendIfChanged(): boolean {
         
         let jp = JoyPayload.fromHardware();
@@ -279,7 +282,7 @@ namespace radiop {
     //% group="Joystick"
     //% weight=100
     export function onReceiveJoystickMessage(handler: (payload: radiop.JoyPayload) => void) {
-        radiop.init(); // Ensure radio is initialized
+        radiop.initDefaults(); // Ensure radio is initialized
         
         _onReceiveJoyHandler = function (payload: JoyPayload) {
             lastJoyPayload = payload;
@@ -288,7 +291,7 @@ namespace radiop {
     }
 
     export function sendJoyPayload(x: number, y: number, buttons: number[], accelX: number, accelY: number, accelZ: number): void {
-        radiop.init();
+        radiop.initDefaults();
         let payload = new radiop.JoyPayload(x, y, buttons, accelX, accelY, accelZ);
         radio.sendBuffer(payload.getBuffer());
     }   
@@ -320,22 +323,6 @@ namespace radiop {
     }
 
 
-    /**
-     * Run the joystick functionality
-     */
-    //% blockId=joystick_run block="run joystick functionality"
-    //% group="Joystick"
-    export function runJoystick() {
-        radiop.init();
-
-        basic.forever(function () {
-            radiop.sendIfChanged();
-        });
-
-        input.onButtonPressed(Button.AB, function () {
-            // Enter the mode to change the 
-        });
-    }
 
 
 }
