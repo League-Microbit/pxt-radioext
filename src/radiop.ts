@@ -161,7 +161,14 @@ namespace radiop {
         return undefined;
     }
 
-
+    /**
+     * Check if the radio is initialized
+     * @returns true if the radio is initialized, false otherwise
+     */
+    //% blockId=radio_is_initialized block="is radio initialized"
+    export function isInitialized(): boolean {
+        return initialized;
+    }
     /**
      * Initialize the radio for joystick payloads
      * @param channel radio channel (default 1, range 1-100)
@@ -229,8 +236,11 @@ namespace radiop {
 
     }
 
-    export function initDefaults(){
-        init(BROADCAST_CHANNEL, BROADCAST_GROUP, 7);
+    export function initDefaults() {
+        
+        if (!initialized) {
+            init(BROADCAST_CHANNEL, BROADCAST_GROUP, 7);
+        }
     }
 
     /**

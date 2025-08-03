@@ -1,6 +1,6 @@
 
 
-if (false) {
+if (true) {
     serial.writeLine("=====================================");
     serial.writeLine("Starting RadioExt tests...");
 

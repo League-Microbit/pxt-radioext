@@ -235,7 +235,7 @@ namespace radiop {
         }
         _beaconInit = true;
 
-        radiop.initDefaults();
+
         myClassId = classId;
       
         serial.writeLine(`Negotiation initialized for classId: ${myClassId}`);
