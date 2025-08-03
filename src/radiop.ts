@@ -177,7 +177,17 @@ namespace radiop {
         group: number = BROADCAST_GROUP, power: number = 7) {
         
         if (initialized) {
-            serial.writeLine("Radio already initialized");
+            if (channel !== _channel || group !== _group) {
+                // If channel or group changed, reinitialize
+                serial.writeLine(`Reinitializing radio on channel ${channel}, group ${group}`);
+                setGroup(group);
+                setChannel(channel);
+                radio.setTransmitPower(power);
+                broadcastHereIAm(); // Resend HereIAm message
+            } else {
+                serial.writeLine("Radio already initialized  on channel ${channel}, group ${group}`);");
+            }
+
             return;
         }
         

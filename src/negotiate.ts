@@ -6,8 +6,7 @@ namespace radiop {
 
     export let lastPayload: HereIAm = null;
     let myClassId: string = "unknown"; // Default class ID
-    let hereIAm: HereIAm = null;  // Default HereIAm message
-
+    
     let _runBeacon = true;
     let _beaconInit = false;
 
@@ -196,12 +195,19 @@ namespace radiop {
     }
 
 
+
+    function newHereIAm(classId?: string, group?: number, channel?: number): HereIAm {
+        let _classId = classId || myClassId;
+        let _group = group !== undefined ? group : radiop.getGroup();
+        let _channel = channel !== undefined ? channel : radiop.getChannel();
+        return new HereIAm(_classId, _group, _channel);
+    }
     /**
      * Send a HereIAm message to the broadcast channel and group 
      */
 
     export function broadcastHereIAm() {
-        _broadcastHereIAm(hereIAm);
+        _broadcastHereIAm(newHereIAm());
     }
             
     export function _broadcastHereIAm(hia: HereIAm) {
@@ -231,7 +237,7 @@ namespace radiop {
 
         radiop.initDefaults();
         myClassId = classId;
-        hereIAm = new HereIAm(myClassId); 
+      
         serial.writeLine(`Negotiation initialized for classId: ${myClassId}`);
 
         let lastChannel: number = undefined
@@ -241,9 +247,10 @@ namespace radiop {
         control.inBackground(function () {
             while (true) {
                 if (_runBeacon) {
-                    
-                    hereIAm.send(); // Send to my private radio 
-                
+                    let hereIAm = newHereIAm();
+
+                    hereIAm.send(); // Send to my private radio
+
                     serial.writeLine(`Sending HereIAm: ${hereIAm.str} on channel ${radiop.getChannel()}, group ${radiop.getGroup()}`);
 
                     // If the channel or group has changed, broadcast the HereIAm message
