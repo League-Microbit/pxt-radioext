@@ -1,6 +1,6 @@
 {
     "name": "radiop",
-    "version": "1.20250813.4",
+    "version": "1.20250813.5",
     "description": "Extends the radio functionality of the micro:bit with joystick support and broadcasting.",
     "dependencies": {
         "core": "*",
@@ -17,7 +17,7 @@
         "src/main.ts"
     ],
     "testFiles": [
-        "test/test.ts"
+      
     ],
     "targetVersions": {
         "target": "8.0.13",
