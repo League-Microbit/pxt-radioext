@@ -56,54 +56,7 @@ namespace radiop {
         Y = AnalogPin.P2,
     }
 
-    let joystickInitialize = false;
-    let defaultCenter = 512; // Default center value for joystick
-    let jsXCenter = 512; // Default center value for joystick X
-    let jsXOffset = 0; // Offset for joystick X
-    let jsYCenter = 512; // Default center value for joystick Y
-    let jsYOffset = 0; // Offset for joystick Y
-    let jsDeadzone = 10; // Deadzone for joystick movement
 
-    export function initJoystick(): void {
-        if (joystickInitialize) return;
-        joystickInitialize = true;
-        pins.digitalWritePin(DigitalPin.P0, 0)
-        pins.setPull(DigitalPin.P12, PinPullMode.PullUp)
-        pins.setPull(DigitalPin.P13, PinPullMode.PullUp)
-        pins.setPull(DigitalPin.P14, PinPullMode.PullUp)
-        pins.setPull(DigitalPin.P15, PinPullMode.PullUp)
-        pins.digitalWritePin(DigitalPin.P16, 1)
-
-        // Calibrate joystick center position
-        let xSum = 0;
-        let ySum = 0;
-        let sampleCount = 0;
-        let startTime = input.runningTime();
-        
-        // Collect samples for 1 second
-        basic.showIcon(IconNames.Sword);
-        while (input.runningTime() - startTime < 1000) {
-            xSum += pins.analogReadPin(JoystickBitPin.X);
-            ySum += pins.analogReadPin(JoystickBitPin.Y);
-            sampleCount++;
-            basic.pause(10); // Small pause between readings
-        }
-        
-        // Calculate average center positions
-        if (sampleCount > 0) {
-            jsXCenter = Math.round(xSum / sampleCount);
-            jsYCenter = Math.round(ySum / sampleCount);
-        }
-        
-        jsXOffset = jsXCenter - defaultCenter; // Adjust offset based on center
-        jsYOffset = jsYCenter - defaultCenter; // Adjust offset based on center
-
-        serial.writeLine("Joystick calibrated - Center X: " + jsXCenter + ", Y: " + jsYCenter);
-        basic.showIcon(IconNames.Yes);
-        basic.pause(200);
-        basic.clearScreen();
-
-    }
     /**
      * Joystick payload with x, y, buttons, and accelerometer data
      */
@@ -150,46 +103,6 @@ namespace radiop {
             let accelY = buffer.getNumber(NumberFormat.Int16LE, 8);
             let accelZ = buffer.getNumber(NumberFormat.Int16LE, 10);
 
-            return new JoyPayload(x, y, buttons, accelX, accelY, accelZ);
-        }
-
-        /**
-         * Create a JoyPayload from current hardware state
-         */
-        static fromHardware(readAccelerometer: boolean = false): JoyPayload {
-            initJoystick()
-
-            // Read joystick X and Y from analog pins
-            let rawX = pins.analogReadPin(JoystickBitPin.X);
-            let rawY = pins.analogReadPin(JoystickBitPin.Y);
-            
-            // Apply offsets to center the values
-            let x = Math.abs(rawX - jsXOffset);
-            let y = Math.abs(rawY - jsYOffset);
-
-            // Check if values are within deadzone and reset to center if so
-            if (Math.abs(x - defaultCenter) <= jsDeadzone) {
-                x = defaultCenter;
-            }
-            if (Math.abs(y - defaultCenter) <= jsDeadzone) {
-                y = defaultCenter;
-            }
-            
-            // Read buttons (micro:bit built-in + joystick buttons)
-            let buttons: number[] = [];
-            if (input.buttonIsPressed(Button.A)) buttons.push(0);
-            if (input.buttonIsPressed(Button.B)) buttons.push(1);
-            if (input.logoIsPressed()) buttons.push(2);
-            if (pins.digitalReadPin(JoystickBitPin.C) == 0) buttons.push(3);  // C button (active low)
-            if (pins.digitalReadPin(JoystickBitPin.D) == 0) buttons.push(4);  // D button (active low)
-            if (pins.digitalReadPin(JoystickBitPin.E) == 0) buttons.push(5);  // E button (active low)
-            if (pins.digitalReadPin(JoystickBitPin.F) == 0) buttons.push(6);  // F button (active low)
-            
-            // Read accelerometer values only if requested
-            let accelX = readAccelerometer ? input.acceleration(Dimension.X) : 0;
-            let accelY = readAccelerometer ? input.acceleration(Dimension.Y) : 0;
-            let accelZ = readAccelerometer ? input.acceleration(Dimension.Z) : 0;
-            
             return new JoyPayload(x, y, buttons, accelX, accelY, accelZ);
         }
 
@@ -259,12 +172,11 @@ namespace radiop {
     //% blockId=joystick_send_if_changed block="send joystick state if changed"
     //% group="Joystick"
     //% weight=70
-    export function sendIfChanged_(): void {
-        sendIfChanged();
+    export function sendIfChanged_(jp: radiop.JoyPayload): void {
+        sendIfChanged(jp);
     }
-    export function sendIfChanged(): boolean {
-        
-        let jp = JoyPayload.fromHardware();
+
+    export function sendIfChanged(jp: radiop.JoyPayload): boolean {
 
         let hasChanged = ( !_lastSentPayload || _lastSentPayload.hash != jp.hash);
         if ( hasChanged) {
