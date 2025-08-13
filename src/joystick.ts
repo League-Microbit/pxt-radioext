@@ -171,10 +171,6 @@ namespace radiop {
      */
     //% blockId=joystick_send_if_changed block="send joystick state if changed"
     //% group="Joystick"
-    //% weight=70
-    export function sendIfChanged_(jp: radiop.JoyPayload): void {
-        sendIfChanged(jp);
-    }
 
     export function sendIfChanged(jp: radiop.JoyPayload): boolean {
 
