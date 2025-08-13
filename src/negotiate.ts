@@ -89,9 +89,7 @@ namespace radiop {
             peer.radioGroup = radioGroup !== undefined ? radioGroup : radiop.getGroup();
             peer.radioChannel = radioChannel !== undefined ? radioChannel : radiop.getChannel();
             peer.lastSeen = input.runningTime();
-            if (peer.hash() !== hash) {
-                serial.writeLine(`Peer update:  ${peer.str()}`);
-            }
+
             return peer;
         }
 
@@ -108,12 +106,6 @@ namespace radiop {
             return this._peers.length;
         }
 
-        dumpToSerial() {
-            serial.writeLine("Peers in database:");
-            for (let peer of this._peers) {
-                serial.writeLine("   "+peer.str());
-            }
-        }
     }
 
     export const peerDb = new PeerDb();
@@ -216,7 +208,6 @@ namespace radiop {
         radiop.setChannel(BROADCAST_CHANNEL);
         radiop.setGroup(BROADCAST_GROUP);
         hia.send(); 
-        //serial.writeLine(`Broadcasting HereIAm: ${hia.str} on channel ${radiop.getChannel()}, group ${radiop.getGroup()}`);
 
         radiop.setChannel(origChannel);
         radiop.setGroup(origGroup);
@@ -238,7 +229,6 @@ namespace radiop {
 
         myClassId = classId;
       
-        serial.writeLine(`Negotiation initialized for classId: ${myClassId}`);
 
         let lastChannel: number = undefined
         let lastGroup: number = undefined
@@ -250,8 +240,6 @@ namespace radiop {
                     let hereIAm = newHereIAm();
 
                     hereIAm.send(); // Send to my private radio
-
-                    serial.writeLine(`Sending HereIAm: ${hereIAm.str} on channel ${radiop.getChannel()}, group ${radiop.getGroup()}`);
 
                     // If the channel or group has changed, broadcast the HereIAm message
                     // to the broadcast channel and group
@@ -276,7 +264,6 @@ namespace radiop {
     //% group='Beacon'
     export function startBeacon() {
         if (!_beaconInit) {
-            serial.writeLine("Beacon not initialized. Call initBeacon first.");
             return;
         }
         _runBeacon = true;
@@ -295,8 +282,6 @@ namespace radiop {
     * and is collecting HearIAm into the PeerDb.     */
 
     function testChannel(i: number, channel: number, group: number): Boolean {
-
-        serial.writeLine(`${i} Testing c${channel} in g ${group}`);
         radiop.setGroup(group);  // clears the PeerDb. 
         radiop.setChannel(channel);
 
@@ -308,8 +293,6 @@ namespace radiop {
             let peer: PeerRecord = peerDb.findPeerByClassId(myClassId);
 
             if (peer) {
-                serial.writeLine(`Found same-class peer ${peer.str()} in C: ${peer.radioChannel} G: ${peer.radioGroup}, `);
-                
                 return false;
             }
             basic.pause(200);
@@ -335,16 +318,13 @@ namespace radiop {
         * so the initial request will always be the same. */
         let [channel, group] = radiop.getInitialRadioRequest();
 
-        serial.writeLine("Finding free radio channel...");
-            
         
         while (true) {
             radioIcon.showImage(0); // Show radio icon to indicate negotiation started
 
             if (testChannel(i, channel, group)) {
                 // Return both channel and group as an array
-                serial.writeLine(`Found free radio channel ${channel} in group ${group}`);
- 
+
                 radiop.setGroup(group);
                 radiop.setChannel(channel);
                 basic.clearScreen();
@@ -363,7 +343,7 @@ namespace radiop {
             basic.pause(200); // Pause to avoid flooding the radio with requests
 
         }
-        return;
+
     }
 
 

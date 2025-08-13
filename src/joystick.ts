@@ -45,18 +45,6 @@ namespace radiop {
         F = 6
     }
 
-
-    // Joystickbit pins for joystick and buttons
-    export enum JoystickBitPin {
-        C = DigitalPin.P12,
-        D = DigitalPin.P13,
-        E = DigitalPin.P14,
-        F = DigitalPin.P15,
-        X = AnalogPin.P1,
-        Y = AnalogPin.P2,
-    }
-
-
     /**
      * Joystick payload with x, y, buttons, and accelerometer data
      */
