@@ -1,6 +1,6 @@
 {
     "name": "radiop",
-    "version": "1.20250813.1",
+    "version": "1.20250813.2",
     "description": "Extends the radio functionality of the micro:bit with joystick support and broadcasting.",
     "dependencies": {
         "core": "*",
