@@ -33,8 +33,8 @@ namespace radiop {
 
     export enum PayloadType {
         JOY = 10,
-    HERE_I_AM = 11,
-    BOT_STATUS = 12
+        HERE_I_AM = 11,
+        BOT_STATUS = 12
     }
 
     export function setGroup(group: number) {
@@ -136,15 +136,8 @@ namespace radiop {
         }
 
         get str(): string {
-            // Print buffer bytes as hex, separated by spaces (MakeCode: use toHex())
-            let hex = this.buffer.toHex();
-            // Insert spaces between every two hex digits
             let spaced = "";
-            for (let i = 0; i < hex.length; i += 2) {
-                if (i > 0) spaced += " ";
-                spaced += hex.substr(i, 2);
-            }
-            return `RadioPayload(type=${this.packetType}, length=${this.payloadLength}, bytes=${spaced})`;
+            return "rp " + this.packetType + " l=" + this.payloadLength;
         }
     }
 
@@ -189,13 +182,13 @@ namespace radiop {
         if (initialized) {
             if (channel !== _channel || group !== _group) {
                 // If channel or group changed, reinitialize
-                serial.writeLine(`Reinitializing radio on channel ${channel}, group ${group}`);
+                // removed serial logging (reinitializing)
                 setGroup(group);
                 setChannel(channel);
                 radio.setTransmitPower(power);
                 broadcastHereIAm(); // Resend HereIAm message
             } else {
-                serial.writeLine("Radio already initialized  on channel ${channel}, group ${group}`);");
+                // removed serial logging (already initialized)
             }
 
             return;
@@ -204,7 +197,7 @@ namespace radiop {
         initialized = true;
 
         // Initialize radio
-        serial.writeLine(`Radio initialized on channel ${channel}, group ${group}`);
+    // removed serial logging (initialized)
         setGroup(group);
         setChannel(channel);
         radio.setTransmitSerialNumber(true);
@@ -226,13 +219,13 @@ namespace radiop {
             // Handler specific to the payload type
             let handler = payload.handler;
             if (handler) {
-                //serial.writeLine("oRB handler");
+                // handler for specific payload type
                 handler(payload);
             }
             
             // Global payload handler if set
             if (payloadHandler) {
-                //serial.writeLine("ORB payloadHandler");
+                // global payload handler
                 payloadHandler(payload);
             } 
         });
