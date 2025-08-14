@@ -147,8 +147,8 @@ namespace radiop {
                 return radiop.JoyPayload.fromBuffer(buffer);
             case PayloadType.HERE_I_AM:
                 return radiop.HereIAm.fromBuffer(buffer);
-            case PayloadType.BOT_STATUS:
-                return radiop.BotStatusMessage.fromBuffer(buffer);
+            //case PayloadType.BOT_STATUS:
+            //    return radiop.BotStatusMessage.fromBuffer(buffer);
         }
 
         return undefined;
