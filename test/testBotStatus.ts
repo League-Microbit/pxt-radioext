@@ -28,6 +28,36 @@ namespace radioptest {
         copy.toImage().showImage(0);
 
     }
-}
 
+    export function testSendBotStatus() {
+        radiop.initDefaults();
+
+        while (true) {
+            for (let i = IconNames.Heart; i <= IconNames.Scissors; i++) {
+                const img = images.iconImage(i as IconNames);
+                // Create and send a bot status message
+                let bsm = new radiop.BotStatusMessage(i, i, i, i, 0, "Test Status");
+                bsm.setImageFromIcon(i as IconNames);
+                bsm.send();
+
+                // Store last sent payload for verification
+                radiop.lastBotStatusMessage = bsm;
+
+                // Print the sent message
+                serial.writeLine("Sent Bot Status: " + bsm.str);
+                bsm.toImage().showImage(0);
+                basic.pause(250)
+            }
+        }
+    }
+
+    export function testReceiveBotStatus() {
+        radiop.initDefaults();
+
+        radiop.onReceiveBotStatusMessage((bsm) => {
+            serial.writeLine("Received Bot Status: " + bsm.str);
+            bsm.toImage().showImage(0);
+        });
+    }
+}
 

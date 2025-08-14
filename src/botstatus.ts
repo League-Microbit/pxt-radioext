@@ -1,5 +1,11 @@
 namespace radiop {
 
+    let _lastSentBSPayload: BotStatusMessage = null;
+    export let lastBotStatusMessage: BotStatusMessage = null;
+
+    let _onReceiveBotStatusHandler: (payload: radiop.RadioPayload) => void = undefined;
+
+
     /* BotStatusMessage
     * code: int32 (4 bytes)
     * dist: int16 (2 bytes)
@@ -165,7 +171,7 @@ namespace radiop {
         }
 
         get handler(): (payload: radiop.RadioPayload) => void {
-            return undefined; // user can hook via onPayload() for now
+            return _onReceiveBotStatusHandler; // user can hook via onPayload() for now
         }
     }
 
@@ -174,6 +180,24 @@ namespace radiop {
         radiop.initDefaults();
         let bsm = new BotStatusMessage(code, dist, pinState, flags, 0, msg);
         if (image) bsm.setImageFromImage(image);
-        bsm.send();
+
+        if(!lastBotStatusMessage || lastBotStatusMessage.hash != bsm.hash) {
+            bsm.send();
+        }
+    }
+
+    /**
+    * Run code when a joystick message is received
+    */
+    //% blockId=joystick_on_receive block="on receive joystick"
+    //% group="Joystick"
+    //% weight=100
+    export function onReceiveBotStatusMessage(handler: (payload: radiop.BotStatusMessage) => void) {
+        radiop.initDefaults(); // Ensure radio is initialized
+
+        _onReceiveBotStatusHandler = function (payload: radiop.BotStatusMessage) {
+            lastBotStatusMessage = payload;
+            handler(payload);
+        };
     }
 }
