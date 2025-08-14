@@ -141,7 +141,12 @@ namespace radiop {
         }
 
         get str(): string {
-            return `JoyPayload(x=${this.x}, y=${this.y}, buttons=[${this.buttons.join(", ")}], accelX=${this.accelX}, accelY=${this.accelY}, accelZ=${this.accelZ})`;
+            return "JoyPayload(x=" + this.x +
+                   ", y=" + this.y +
+                   ", buttons=[" + this.buttons.join(", ") + "]" +
+                   ", accelX=" + this.accelX +
+                   ", accelY=" + this.accelY +
+                   ", accelZ=" + this.accelZ + ")";
         }
 
         public buttonPressed(button: JoystickButton): boolean {

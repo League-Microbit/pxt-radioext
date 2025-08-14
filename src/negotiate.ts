@@ -42,9 +42,13 @@ namespace radiop {
         }
 
 
-
         str(): string {
-            return `PeerRecord(${this.hash()} serial=${radiop.toHex(this.serial)}, classId=${this.classId}, group=${this.radioGroup}, channel=${this.radioChannel}, lastSeen=${this.lastSeen})`;
+            return "PeerRecord(" + this.hash() +
+                   " serial=" + radiop.toHex(this.serial) +
+                   ", classId=" + this.classId +
+                   ", group=" + this.radioGroup +
+                   ", channel=" + this.radioChannel +
+                   ", lastSeen=" + this.lastSeen + ")";
         }
     }
 
@@ -163,7 +167,10 @@ namespace radiop {
         }
 
         get str(): string {
-            return `HereIaM(classId=${this.classId}, group=${this.group}, channel=${this.channel}, serial=0x${radiop.toHex(this.serial)})`;
+            return "HereIaM(classId=" + this.classId +
+                   ", group=" + this.group +
+                   ", channel=" + this.channel +
+                   ", serial=0x" + radiop.toHex(this.serial) + ")";
         }
 
         get handler(): (payload: HereIAm) => void {
