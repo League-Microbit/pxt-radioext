@@ -16,9 +16,7 @@
         "enums.d.ts",
         "src/main.ts"
     ],
-    "testFiles": [
-      
-    ],
+    "testFiles": [],
     "targetVersions": {
         "target": "8.0.13",
         "targetId": "microbit"
