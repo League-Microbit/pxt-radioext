@@ -135,10 +135,7 @@ namespace radiop {
             radio.sendBuffer(this.getBuffer());
         }
 
-        get str(): string {
-            let spaced = "";
-            return "rp " + this.packetType + " l=" + this.payloadLength;
-        }
+
     }
 
     /* Construct a payload from a buffer. This is the central

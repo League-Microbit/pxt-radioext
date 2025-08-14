@@ -42,14 +42,6 @@ namespace radiop {
         }
 
 
-        str(): string {
-            return "pr " + this.hash() +
-                   " s=" + radiop.toHex(this.serial) +
-                   " c=" + this.classId +
-                   " g=" + this.radioGroup +
-                   " ch=" + this.radioChannel +
-                   " ls=" + this.lastSeen;
-        }
     }
 
     export class PeerDb {
@@ -164,13 +156,6 @@ namespace radiop {
 
         get hash(): number {
             return (this.classId.length > 0 ? this.classId.charCodeAt(0) : 0) ^ (this.serial || 0);
-        }
-
-        get str(): string {
-            return "H(ci " + this.classId +
-                   " g " + this.group +
-                   " c " + this.channel +
-                   " s " + radiop.toHex(this.serial) + ")";
         }
 
         get handler(): (payload: HereIAm) => void {

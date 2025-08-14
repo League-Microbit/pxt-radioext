@@ -140,11 +140,6 @@ namespace radiop {
             return hash;
         }
 
-        get str(): string {
-            return "jp(x " + this.x +
-                   " y " + this.y +
-                   " b " + this.buttons.join(", ") + ")";
-        }
 
         public buttonPressed(button: JoystickButton): boolean {
             return this.buttons.indexOf(button) !== -1;

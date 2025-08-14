@@ -114,13 +114,7 @@ namespace radiop {
             return h >>> 0;
         }
 
-        get str(): string {
-            return "BS c=" + this.code +
-                " d=" + this.dist +
-                " p=" + this.pinState +
-                " f=" + this.flags +
-                " i=" + radiop.toHex(this.imageBits);
-        }
+
 
         get handler(): (payload: radiop.RadioPayload) => void {
             return _onReceiveBotStatusHandler; // user can hook via onPayload() for now
