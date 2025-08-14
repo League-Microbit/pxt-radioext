@@ -167,10 +167,10 @@ namespace radiop {
         }
 
         get str(): string {
-            return "HereIaM(classId=" + this.classId +
-                   ", group=" + this.group +
-                   ", channel=" + this.channel +
-                   ", serial=0x" + radiop.toHex(this.serial) + ")";
+            return "H(ci " + this.classId +
+                   " g " + this.group +
+                   " c " + this.channel +
+                   " s " + radiop.toHex(this.serial) + ")";
         }
 
         get handler(): (payload: HereIAm) => void {
