@@ -14,18 +14,10 @@ namespace radioptest {
         let copy = radiop.BotStatusMessage.fromBuffer(buf);
         let h2 = copy.hash;
 
-        // Compare hashes
-        if (h1 != h2) {
-            serial.writeLine("Hash mismatch: " + h1 + " != " + h2);
-        } else {
-            serial.writeLine("Hash OK: " + h1);
+        if (h1 == h2) {
+            copy.toImage().showImage(0);
         }
-
-        // Print string representations
-        serial.writeLine(original.str);
-        serial.writeLine(copy.str);
-
-        copy.toImage().showImage(0);
+        
 
     }
 
@@ -43,8 +35,6 @@ namespace radioptest {
                 // Store last sent payload for verification
                 radiop.lastBotStatusMessage = bsm;
 
-                // Print the sent message
-                serial.writeLine("Sent Bot Status: " + bsm.str);
                 bsm.toImage().showImage(0);
                 basic.pause(250)
             }
@@ -55,7 +45,6 @@ namespace radioptest {
         radiop.initDefaults();
 
         radiop.onReceiveBotStatusMessage((bsm) => {
-            serial.writeLine("Received Bot Status: " + bsm.str);
             bsm.toImage().showImage(0);
         });
     }

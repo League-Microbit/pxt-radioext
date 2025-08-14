@@ -135,12 +135,11 @@ namespace radiop {
         }
 
         get str(): string {
-            return "BS(c=" + this.code +
+            return "BS c=" + this.code +
                 " d=" + this.dist +
                 " p=" + this.pinState +
                 " f=" + this.flags +
-                " i=" + radiop.toHex(this.imageBits) +
-                ")";
+                " i=" + radiop.toHex(this.imageBits);
         }
 
         get handler(): (payload: radiop.RadioPayload) => void {
