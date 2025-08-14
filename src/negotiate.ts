@@ -5,7 +5,7 @@
 namespace radiop {
 
     export let lastPayload: HereIAm = null;
-    let myClassId: string = "unknown"; // Default class ID
+    let myClassId: string = "unk"; // Default class ID
     
     let _runBeacon = true;
     let _beaconInit = false;
@@ -43,12 +43,12 @@ namespace radiop {
 
 
         str(): string {
-            return "PeerRecord(" + this.hash() +
-                   " serial=" + radiop.toHex(this.serial) +
-                   ", classId=" + this.classId +
-                   ", group=" + this.radioGroup +
-                   ", channel=" + this.radioChannel +
-                   ", lastSeen=" + this.lastSeen + ")";
+            return "pr " + this.hash() +
+                   " s=" + radiop.toHex(this.serial) +
+                   " c=" + this.classId +
+                   " g=" + this.radioGroup +
+                   " ch=" + this.radioChannel +
+                   " ls=" + this.lastSeen;
         }
     }
 
