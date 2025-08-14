@@ -1,13 +1,12 @@
 {
     "name": "radiop",
-    "version": "1.20250814.9",
+    "version": "1.20250814.10",
     "description": "Extends the radio functionality of the micro:bit with joystick support and broadcasting.",
     "dependencies": {
         "core": "*",
         "radio": "*"
     },
     "files": [
-        "src/botstatus.ts",
         "src/radiop.ts",
         "src/joystick.ts",
         "src/negotiate.ts",
