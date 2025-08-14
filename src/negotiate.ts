@@ -40,15 +40,11 @@ namespace radiop {
             //hash ^= this.lastSeen << 24;
             return hash >>> 0; // Ensure unsigned
         }
-
-
     }
 
     export class PeerDb {
 
         private _peers: PeerRecord[] = [];
-
-
         constructor() {
             this._peers = [];
         }
@@ -177,7 +173,6 @@ namespace radiop {
             defaultOnReceiveHandler(payload, handler);
         };
     }
-
 
 
     function newHereIAm(classId?: string, group?: number, channel?: number): HereIAm {
