@@ -9,6 +9,6 @@ serial.writeLine("Starting RadioExt tests...");
 // radioptest.testFindChannel();
 //radioptest.testListen();
 
-radioptest.testBotStatus();
+//radioptest.testBotStatus();
 //radioptest.testSendBotStatus();]
-radioptest.testReceiveBotStatus();
+//radioptest.testReceiveBotStatus();
