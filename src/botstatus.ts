@@ -176,7 +176,7 @@ namespace radiop {
     }
 
     //% blockId=bot_status_send block="send bot status code $code dist $dist flags $flags image $image msg $msg" weight=80 group="Robot"
-    export function sendBotStatus(code: number, dist: number, pinState: number, flags: number, image: Image, msg: string) {
+    export function sendBotStatus(code: number, dist: number, pinState: number, flags: number, image?: Image | null, msg?: string) {
         radiop.initDefaults();
         let bsm = new BotStatusMessage(code, dist, pinState, flags, 0, msg);
         if (image) bsm.setImageFromImage(image);
