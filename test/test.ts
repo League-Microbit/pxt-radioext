@@ -25,6 +25,6 @@ if (false) {
 // radioptest.testFindChannel();
 //radioptest.testListen();
 
-//radioptest.testBotStatus();
+radioptest.testBotStatus();
 //radioptest.testSendBotStatus();]
 radioptest.testReceiveBotStatus();

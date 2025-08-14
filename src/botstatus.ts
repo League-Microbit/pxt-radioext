@@ -12,8 +12,7 @@ namespace radiop {
     * pinState: int16 (2 bytes)
     * flags: int32 (4 bytes)
     * image: int32 (4 bytes) - 25 bits used (5x5 LED matrix) packed LSB first (bit0 = (0,0))
-    * message: remaining bytes (up to PACKET_SIZE - header)
-    * Total fixed = 16 bytes + 1 (packet type) = 17 before message. We'll cap packet at 32 bytes like others.
+    * Total fixed = 16 bytes + 1 (packet type) = 17 bytes total.
     */
     export class BotStatusMessage extends radiop.RadioPayload {
         public code: number;       // int32
@@ -21,72 +20,47 @@ namespace radiop {
         public pinState: number;   // int16 (bit fields)
         public flags: number;      // int32 (bit fields)
         public imageBits: number;  // int32 (25 bits)
-        public message: string;    // remaining
 
-        
-        static readonly FIXED_SIZE = 1 /*type*/ + 4 + 2 + 2 + 4 + 4; // 17 bytes so far (including type)
-        static readonly MAX_PACKET_SIZE = radiop.RadioPayload.MAX_PACKET_SIZE; // align with base limit
-        static readonly MAX_MESSAGE_LEN = BotStatusMessage.MAX_PACKET_SIZE - BotStatusMessage.FIXED_SIZE;
+        static readonly PACKET_SIZE = 17; // exact size including type byte
 
-        // Byte offsets after packet type
-        private static readonly OFF_CODE = 1;
-        private static readonly OFF_DIST = BotStatusMessage.OFF_CODE + 4;
-        private static readonly OFF_PINSTATE = BotStatusMessage.OFF_DIST + 2;
-        private static readonly OFF_FLAGS = BotStatusMessage.OFF_PINSTATE + 2;
-        private static readonly OFF_IMAGE = BotStatusMessage.OFF_FLAGS + 4;
-        private static readonly OFF_MSG = BotStatusMessage.OFF_IMAGE + 4; // start of message chars
+    // Byte layout (after packet type byte @0):
+    // code:int32 @1..4, dist:int16 @5..6, pinState:int16 @7..8, flags:int32 @9..12,
+    // imageBits:int32 @13..16, message chars @17..
+    // (Offsets inlined in code to save memory.)
 
-        constructor(code: number, dist: number, pinState: number, flags: number, imageBits?: number, message?: string) {
-            super(radiop.PayloadType.BOT_STATUS, BotStatusMessage.MAX_PACKET_SIZE);
-            this.fromValues(code, dist, pinState, flags, imageBits || 0, message || "");
+        constructor(code: number, dist: number, pinState: number, flags: number, imageBits?: number) {
+            super(radiop.PayloadType.BOT_STATUS, BotStatusMessage.PACKET_SIZE);
+            this.fromValues(code, dist, pinState, flags, imageBits || 0);
         }
 
-        private fromValues(code: number, dist: number, pinState: number, flags: number, imageBits: number, message: string) {
+        private fromValues(code: number, dist: number, pinState: number, flags: number, imageBits: number) {
             this.code = code | 0;
             this.dist = dist | 0;
             this.pinState = pinState | 0;
             this.flags = flags | 0;
             this.imageBits = imageBits >>> 0;
-            this.message = message || "";
 
-            this.buffer.setNumber(NumberFormat.Int32LE, BotStatusMessage.OFF_CODE, this.code);
-            this.buffer.setNumber(NumberFormat.Int16LE, BotStatusMessage.OFF_DIST, this.dist);
-            this.buffer.setNumber(NumberFormat.Int16LE, BotStatusMessage.OFF_PINSTATE, this.pinState);
-            this.buffer.setNumber(NumberFormat.Int32LE, BotStatusMessage.OFF_FLAGS, this.flags);
-            this.buffer.setNumber(NumberFormat.Int32LE, BotStatusMessage.OFF_IMAGE, this.imageBits);
-
-            // Truncate / pack message
-            const len = Math.min(this.message.length, BotStatusMessage.MAX_MESSAGE_LEN);
-            for (let i = 0; i < len; ++i) {
-                this.buffer.setUint8(BotStatusMessage.OFF_MSG + i, this.message.charCodeAt(i) & 0xFF);
-            }
-            // Zero fill remainder for determinism
-            for (let j = len; j < BotStatusMessage.MAX_MESSAGE_LEN; ++j) {
-                this.buffer.setUint8(BotStatusMessage.OFF_MSG + j, 0);
-            }
+            this.buffer.setNumber(NumberFormat.Int32LE, 1, this.code);      // code
+            this.buffer.setNumber(NumberFormat.Int16LE, 5, this.dist);      // dist
+            this.buffer.setNumber(NumberFormat.Int16LE, 7, this.pinState);  // pinState
+            this.buffer.setNumber(NumberFormat.Int32LE, 9, this.flags);     // flags
+            this.buffer.setNumber(NumberFormat.Int32LE, 13, this.imageBits);// imageBits
         }
 
         static fromBuffer(buffer: Buffer): BotStatusMessage {
-            let code = buffer.getNumber(NumberFormat.Int32LE, BotStatusMessage.OFF_CODE);
-            let dist = buffer.getNumber(NumberFormat.Int16LE, BotStatusMessage.OFF_DIST);
-            let pinState = buffer.getNumber(NumberFormat.Int16LE, BotStatusMessage.OFF_PINSTATE);
-            let flags = buffer.getNumber(NumberFormat.Int32LE, BotStatusMessage.OFF_FLAGS);
-            let imageBits = buffer.getNumber(NumberFormat.Int32LE, BotStatusMessage.OFF_IMAGE) >>> 0;
-            let chars: string[] = [];
-            for (let i = 0; i < BotStatusMessage.MAX_MESSAGE_LEN; ++i) {
-                const c = buffer.getUint8(BotStatusMessage.OFF_MSG + i);
-                if (c == 0) break;
-                chars.push(String.fromCharCode(c));
-            }
-            let msg = chars.join("");
-            return new BotStatusMessage(code, dist, pinState, flags, imageBits, msg);
+            let code = buffer.getNumber(NumberFormat.Int32LE, 1);
+            let dist = buffer.getNumber(NumberFormat.Int16LE, 5);
+            let pinState = buffer.getNumber(NumberFormat.Int16LE, 7);
+            let flags = buffer.getNumber(NumberFormat.Int32LE, 9);
+            let imageBits = buffer.getNumber(NumberFormat.Int32LE, 13) >>> 0;
+            return new BotStatusMessage(code, dist, pinState, flags, imageBits);
         }
 
         // Bit helpers for pinState & flags
         public setPinBit(bit: number, value: boolean) {
             if (bit < 0 || bit > 15) return;
             if (value) this.pinState |= (1 << bit); else this.pinState &= ~(1 << bit);
-            this.buffer.setNumber(NumberFormat.Int16LE, BotStatusMessage.OFF_PINSTATE, this.pinState);
+            this.buffer.setNumber(NumberFormat.Int16LE, 7, this.pinState);
         }
         public getPinBit(bit: number): boolean {
             if (bit < 0 || bit > 15) return false;
@@ -95,7 +69,7 @@ namespace radiop {
         public setFlag(bit: number, value: boolean) {
             if (bit < 0 || bit > 31) return;
             if (value) this.flags |= (1 << bit); else this.flags &= ~(1 << bit);
-            this.buffer.setNumber(NumberFormat.Int32LE, BotStatusMessage.OFF_FLAGS, this.flags);
+            this.buffer.setNumber(NumberFormat.Int32LE, 9, this.flags);
         }
         public getFlag(bit: number): boolean {
             if (bit < 0 || bit > 31) return false;
@@ -130,7 +104,7 @@ namespace radiop {
 
         public setImageBits(bits: number) {
             this.imageBits = bits >>> 0;
-            this.buffer.setNumber(NumberFormat.Int32LE, BotStatusMessage.OFF_IMAGE, this.imageBits);
+            this.buffer.setNumber(NumberFormat.Int32LE, 13, this.imageBits);
         }
 
         public toImage(): Image {
@@ -157,16 +131,15 @@ namespace radiop {
             h ^= (this.pinState & 0xFFFF) << 2;
             h ^= this.flags;
             h ^= this.imageBits;
-            if (this.message && this.message.length) h ^= this.message.charCodeAt(0) << 16;
             return h >>> 0;
         }
 
         get str(): string {
-            return "BS(code=" + this.code +
-                ", dist=" + this.dist +
-                ", pinState=" + this.pinState +
-                ", flags=" + this.flags +
-                ", imageBits=0x" + radiop.toHex(this.imageBits) +
+            return "BS(c=" + this.code +
+                " d=" + this.dist +
+                " p=" + this.pinState +
+                " f=" + this.flags +
+                " i=" + radiop.toHex(this.imageBits) +
                 ")";
         }
 
@@ -176,9 +149,9 @@ namespace radiop {
     }
 
     //% blockId=bot_status_send block="send bot status code $code dist $dist flags $flags image $image msg $msg" weight=80 group="Robot"
-    export function sendBotStatus(code: number, dist: number, pinState: number, flags: number, image?: Image | null, msg?: string) {
+    export function sendBotStatus(code: number, dist: number, pinState: number, flags: number, image?: Image | null) {
         radiop.initDefaults();
-        let bsm = new BotStatusMessage(code, dist, pinState, flags, 0, msg);
+        let bsm = new BotStatusMessage(code, dist, pinState, flags, 0);
         if (image) bsm.setImageFromImage(image);
 
         if(!lastBotStatusMessage || lastBotStatusMessage.hash != bsm.hash) {
