@@ -114,8 +114,6 @@ namespace radiop {
             return h >>> 0;
         }
 
-
-
         get handler(): (payload: radiop.RadioPayload) => void {
             return _onReceiveBotStatusHandler; // user can hook via onPayload() for now
         }
