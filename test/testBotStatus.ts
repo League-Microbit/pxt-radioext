@@ -4,8 +4,7 @@ namespace radioptest {
         radiop.initDefaults();
         // Create original message
         let original = new radiop.BotStatusMessage(42, 123, 0x0003, 0xA5A5, 0);
-        original.setFlag(5, true);
-        original.setPinBit(2, true);
+     
         original.setImageFromIcon(IconNames.Heart);
         let h1 = original.hash;
 

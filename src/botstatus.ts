@@ -56,26 +56,6 @@ namespace radiop {
             return new BotStatusMessage(code, dist, pinState, flags, imageBits);
         }
 
-        // Bit helpers for pinState & flags
-        public setPinBit(bit: number, value: boolean) {
-            if (bit < 0 || bit > 15) return;
-            if (value) this.pinState |= (1 << bit); else this.pinState &= ~(1 << bit);
-            this.buffer.setNumber(NumberFormat.Int16LE, 7, this.pinState);
-        }
-        public getPinBit(bit: number): boolean {
-            if (bit < 0 || bit > 15) return false;
-            return (this.pinState & (1 << bit)) != 0;
-        }
-        public setFlag(bit: number, value: boolean) {
-            if (bit < 0 || bit > 31) return;
-            if (value) this.flags |= (1 << bit); else this.flags &= ~(1 << bit);
-            this.buffer.setNumber(NumberFormat.Int32LE, 9, this.flags);
-        }
-        public getFlag(bit: number): boolean {
-            if (bit < 0 || bit > 31) return false;
-            return (this.flags & (1 << bit)) != 0;
-        }
-
         // Image helpers (5x5) using bits
         // bit index = y*5 + x (0..24)
         private coordBit(x: number, y: number): number { return y * 5 + x; }
