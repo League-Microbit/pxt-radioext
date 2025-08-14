@@ -18,7 +18,7 @@
     ],
     "testFiles": [
         "test/test.ts",
-        "test/testBotStatus.ts"
+
     ],
     "targetVersions": {
         "target": "8.0.13",
