@@ -7,6 +7,7 @@
         "radio": "*"
     },
     "files": [
+        "src/botstatus.ts",
         "src/radiop.ts",
         "src/joystick.ts",
         "src/negotiate.ts",
@@ -16,7 +17,10 @@
         "enums.d.ts",
         "src/main.ts"
     ],
-    "testFiles": [],
+    "testFiles": [
+        "test/test.ts",
+        "test/testBotStatus.ts"
+    ],
     "targetVersions": {
         "target": "8.0.13",
         "targetId": "microbit"

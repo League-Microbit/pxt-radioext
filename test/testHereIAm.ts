@@ -51,16 +51,6 @@ namespace radioptest {
 
     }
 
-    export function testListenNegotiate() {
-        
-        radiop.init();
-        basic.showIcon(IconNames.Happy);
 
-        radiop.onReceive((payload) => {
-            serial.writeLine("TL Received: " + payload.str + " on channel " + radiop.getChannel() + ", group " + radiop.getGroup());
-            radiop.peerDb.dumpToSerial();
-        });
-
-    }
 
 }

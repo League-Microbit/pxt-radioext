@@ -1,8 +1,9 @@
 
-
+serial.writeLine("=====================================");
+serial.writeLine("Starting RadioExt tests...");
+    
 if (false) {
-    serial.writeLine("=====================================");
-    serial.writeLine("Starting RadioExt tests...");
+
 
     radiop.init(1, 1)
     radiop.initBeacon("Bumstower")
@@ -24,3 +25,4 @@ if (false) {
 // radioptest.testFindChannel();
 //radioptest.testListen();
 
+radioptest.testBotStatus();

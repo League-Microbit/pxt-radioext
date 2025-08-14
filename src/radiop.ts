@@ -33,7 +33,8 @@ namespace radiop {
 
     export enum PayloadType {
         JOY = 10,
-        HERE_I_AM = 11
+    HERE_I_AM = 11,
+    BOT_STATUS = 12
     }
 
     export function setGroup(group: number) {
@@ -72,7 +73,7 @@ namespace radiop {
 
         readonly BYTE_POS_PACKET_TYPE = 0; // Position of packet type in the buffer
         readonly BYTE_POS_PAYLOAD_START = 1; // Position of payload start in the buffer
-
+        static readonly MAX_PACKET_SIZE = 19; // Maximum payload size in bytes (micro:bit radio limit)
 
 
         public packet: radio.RadioPacket = undefined; 
@@ -156,6 +157,8 @@ namespace radiop {
                 return radiop.JoyPayload.fromBuffer(buffer);
             case PayloadType.HERE_I_AM:
                 return radiop.HereIAm.fromBuffer(buffer);
+            case PayloadType.BOT_STATUS:
+                return radiop.BotStatusMessage.fromBuffer(buffer);
         }
 
         return undefined;
