@@ -22,7 +22,9 @@ namespace radiop {
         //% block="Accelerometer Y"
         AccelY = 3,
         //% block="Accelerometer Z"
-        AccelZ = 4
+        AccelZ = 4,
+        //% block="Data"
+        Data = 5
     }
 
     /**
@@ -113,6 +115,7 @@ namespace radiop {
             case JoystickValue.AccelX: return payload.accelX;
             case JoystickValue.AccelY: return payload.accelY;
             case JoystickValue.AccelZ: return payload.accelZ;
+            case JoystickValue.Data: return payload.datau16;
         }
         return 0;
     }
@@ -126,6 +129,28 @@ namespace radiop {
     export function buttonPressed(payload: JoyPayload, button: JoystickButton): boolean {
         if (!payload) return false;
         return payload.buttonPressed(button);
+    }
+
+    /**
+     * Get the 5x5 image stored in the joystick payload (lower 25 bits of image field)
+     */
+    //% blockId=joystick_get_image block="joystick $payload image"
+    //% group="Joystick"
+    //% weight=70
+    export function getImage(payload: JoyPayload): Image {
+        if (!payload) return images.createImage(`\n.....\n.....\n.....\n.....\n.....`);
+        return radiop.intoToImage(payload.image);
+    }
+
+    /**
+     * Get the generic 16-bit data value from the joystick payload
+     */
+    //% blockId=joystick_get_data block="joystick $payload data"
+    //% group="Joystick"
+    //% weight=60
+    export function getData(payload: JoyPayload): number {
+        if (!payload) return 0;
+        return payload.datau16;
     }
 
 
