@@ -90,8 +90,35 @@ namespace radiop {
         get datau16(): number { return this.u16(12); }
         set datau16(v: number) { this.su16(12, v & 0xffff); }
 
-        get image(): number { return this.buffer.getNumber(NumberFormat.UInt32LE,14); }
-        set image(v: number) { this.buffer.setNumber(NumberFormat.UInt32LE,14,(v|0)>>>0); }
+        // Numeric raw 25-bit (stored in 32-bit) accessors
+        get imageBits(): number { return this.buffer.getNumber(NumberFormat.UInt32LE,14); }
+        set imageBits(v: number) { this.buffer.setNumber(NumberFormat.UInt32LE,14,(v|0)>>>0); }
+
+        /**
+         * Get the image as a 5x5 Image object reconstructed from the stored bits.
+         */
+    
+        // Getter returns an Image instance but is typed 'any' so callers can assign IconNames enumerants to the setter without a type error.
+        get image(): any { return radiop.intoToImage(this.imageBits); }
+        /**
+         * Set image field from raw bits (number), an IconNames value, or a 5x5 Image.
+         * If an IconNames enum value is supplied, it's converted to a 25-bit bitmap.
+         * If an Image is supplied, it's packed into 25 bits (bit index = y*5 + x).
+         */
+        set image(v: any) {
+            let bits = 0;
+            if (v) {
+                if (typeof v === "object" && (v as Image).width) {
+                    bits = radiop.imageToInt(v as Image);
+                } else if (typeof v === "number") {
+                    const asEnumName = (IconNames as any)[v];
+                    if (asEnumName !== undefined) bits = radiop.imageToInt(images.iconImage(v));
+                    else bits = (v | 0) >>> 0;
+                }
+            }
+           
+            this.imageBits = bits >>> 0;
+        }
                 
         buttonPressed(btn: JoystickButton): boolean { return (this.gb() & (1 << btn)) != 0; }
         setButton(btn: JoystickButton, on: boolean) { let bits=this.gb(); if (on) bits|=(1<<btn); else bits&=~(1<<btn); this.sb(bits); }
@@ -138,8 +165,8 @@ namespace radiop {
     //% group="Joystick"
     //% weight=70
     export function getImage(payload: JoyPayload): Image {
-        if (!payload) return images.createImage(`\n.....\n.....\n.....\n.....\n.....`);
-        return radiop.intoToImage(payload.image);
+    if (!payload) return images.createImage(`\n.....\n.....\n.....\n.....\n.....`);
+    return payload.image;
     }
 
     /**
