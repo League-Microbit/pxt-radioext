@@ -1,55 +1,47 @@
 let memberNumber = 0;
 
 namespace radioptest {
-    export function testHereIAm() {
-        serial.writeLine("Test HereIAm");
 
-        radiop.init(1,1);
-
-        for (let i = 0; i < 10; ++i) {
-            // Create HereIaM with current member number, default group/channel
-            let h1 = new radiop.HereIAm('footester_' + i);
-            // Reconstruct from buffer
-            let h2 = radiop.HereIAm.fromBuffer(h1.getBuffer());
-
-            // Compare hashes and show status
-            if (h1.hash === h2.hash) {
-                serial.writeLine(h1.str);
-                basic.showIcon(IconNames.Yes);
-            } else {
-                basic.showIcon(IconNames.No);
-                serial.writeLine("Hash mismatch! h1: " + h1.hash + " h2: " + h2.hash);
-                serial.writeLine("h1: " + h1.str);
-                serial.writeLine("h2: " + h2.str);
-            }
-
-            // Send the message
-            h1.send()
-
-            basic.pause(200);
-        }
-
-
+    export function randDeviceClass() {
+        let classes: number[] = [
+            radiop.DeviceClass.CUTEBOT,
+            radiop.DeviceClass.CUTEBOTPRO,
+            radiop.DeviceClass.JOYSTICK,
+            radiop.DeviceClass.DEVICE100,
+            radiop.DeviceClass.DEVICE101,
+            radiop.DeviceClass.DEVICE102
+        ];
+        return classes[randint(0, classes.length - 1)];
     }
 
-    export function testBeacon() {
+	// Initialize beacon with random DeviceClass and dump peers on each HereIAm
+	export function testHereIAm() {
+		radiop.initDefaults();
 
-        radiop.init(1, 1);
-        radiop.initBeacon('beacontester');
-        
-        while (true) {
-            basic.pause(2000);
-        }
+		// Pick a random non-UNKNOWN class
+		let cls = radioptest.randDeviceClass();
 
-    }
+		serial.writeLine("Init HereIAm beacon class=" + cls);
+		radiop.initBeacon(cls as radiop.DeviceClass);
 
-    export function testFindChannel() {
-        
-        radiop.init();
-        radiop.initBeacon('joystick');
-        radiop.findFreeChannel()
-
-    }
+		// Maintain a list of peer serial numbers to avoid for..in enumeration
+		let peerSerials: number[] = [];
+		// Handler: dump all peers each time a HereIAm arrives
+		radiop.onReceiveHereIAm(function (h: radiop.HereIAm) {
+			// Track new serials
+			if (peerSerials.indexOf(h.serial) < 0) {
+				peerSerials.push(h.serial);
+			}
+			let count = peerSerials.length;
+			serial.writeLine("-- Peers (" + count + ") --");
+			for (let i = 0; i < peerSerials.length; i++) {
+				let p = radiop.peers[peerSerials[i]];
+				if (p) {
+					serial.writeLine("t=" + p.time + " serial=" + p.serial + " rssi=" + p.signal + " ch=" + p.channel + " grp=" + p.group);
+				}
+			}
+		});
+	}
 
 
 

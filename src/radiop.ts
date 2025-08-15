@@ -40,7 +40,7 @@ namespace radiop {
     export function setGroup(group: number) {
         if (group != _group) {
             _group = group;
-            radiop.peerDb.clearPeers(); // Clear peers when group changes
+            radiop.clearPeers(); // Clear peers when group changes (peerDb removed)
         }
         radio.setGroup(group);
     }
@@ -52,7 +52,7 @@ namespace radiop {
 
     export function setChannel(channel: number) {
         if (channel != _channel) {
-            radiop.peerDb.clearPeers(); // Clear peers when channel changes
+            radiop.clearPeers(); // Clear peers when channel changes (peerDb removed)
             _channel = channel;
         }
         
@@ -83,7 +83,9 @@ namespace radiop {
         constructor(packetType: number, size: number) {
             this.packetType = packetType;
             this.buffer = control.createBuffer(size);
-            this.buffer.setNumber(NumberFormat.UInt8LE, this.BYTE_POS_PACKET_TYPE, packetType);
+            this.buffer.fill(0)
+            this.buffer.setNumber(NumberFormat.UInt8LE,
+                                  this.BYTE_POS_PACKET_TYPE, packetType);
         }
 
 
@@ -124,11 +126,8 @@ namespace radiop {
         }
 
         get hash(): number {
-            return 0;
+            return this.buffer.hash(32);
         }
-
-
-        
 
         get handler(): (payload: RadioPayload) => void {
             return undefined;
@@ -137,6 +136,43 @@ namespace radiop {
         send(): void {
             radio.sendBuffer(this.getBuffer());
         }
+
+        /** Get the value (0/1) of a bit within a number stored at a byte offset in the payload buffer.
+         * @param byteOffset start of the number within the buffer
+         * @param bit bit position (0 = least significant)
+         * @param format numeric format (size determines how many bytes are read); default UInt8LE
+         */
+        getBit(byteOffset: number, bit: number, format: NumberFormat = NumberFormat.UInt8LE): number {
+            if (bit < 0 || bit > 31) return 0;
+            let v = this.buffer.getNumber(format, byteOffset);
+            return (v & (1 << bit)) ? 1 : 0;
+        }
+
+        /** Set or clear a bit (accepts 0/1 or false/true) within a number at a byte offset in the buffer.
+         * @param byteOffset start of the number in the buffer
+         * @param bit bit position (0 = least significant)
+         * @param value boolean or 0/1; other numbers treated as truthy/non-zero
+         * @param format numeric format; default UInt8LE
+         */
+        setBit(byteOffset: number, bit: number, value: number | boolean, format: NumberFormat = NumberFormat.UInt8LE): void {
+            if (bit < 0 || bit > 31) return;
+            let v = this.buffer.getNumber(format, byteOffset);
+            if (value ? true : false) v |= (1 << bit); else v &= ~(1 << bit);
+            this.buffer.setNumber(format, byteOffset, v);
+        }
+
+        /** Toggle (invert) a bit at the given position */
+        toggleBit(byteOffset: number, bit: number, format: NumberFormat = NumberFormat.UInt8LE): void {
+            if (bit < 0 || bit > 31) return;
+            let v = this.buffer.getNumber(format, byteOffset) ^ (1 << bit);
+            this.buffer.setNumber(format, byteOffset, v);
+        }
+
+    // Short numeric accessors to reduce repetition and possibly flash size
+    u16(off: number): number { return this.buffer.getNumber(NumberFormat.UInt16LE, off); }
+    su16(off: number, v: number) { this.buffer.setNumber(NumberFormat.UInt16LE, off, v & 0xffff); }
+    i16(off: number): number { return this.buffer.getNumber(NumberFormat.Int16LE, off); }
+    si16(off: number, v: number) { this.buffer.setNumber(NumberFormat.Int16LE, off, v); }
 
 
     }

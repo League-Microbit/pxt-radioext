@@ -5,164 +5,71 @@
 namespace radiop {
 
     export let lastPayload: HereIAm = null;
-    let myClassId: string = "unk"; // Default class ID
-    
+    // Device class enum stored as single byte in HereIAm packet
+    export enum DeviceClass {
+        UNKNOWN = 0,
+        CUTEBOT = 10,
+        CUTEBOTPRO = 11,
+        JOYSTICK = 20,
+        DEVICE100 = 100,
+        DEVICE101 = 101,
+        DEVICE102 = 102
+
+    }
+    let myClassId: DeviceClass = DeviceClass.UNKNOWN; // Default class ID
+    export let peers: { [serial: number]: HereIAm } = {};
+
     let _runBeacon = true;
     let _beaconInit = false;
 
     let _onReceiveHandler: (payload: HereIAm) => void = defaultOnReceiveHandler;
 
 
-    /* Record of a peer in the network */
-    export class PeerRecord {
-        public serial: number;
-        public radioGroup: number;
-        public radioChannel: number;
-        public classId: string; // Class ID of the peer, like 'joystick' or 'robot'
-        public lastSeen: number; // Timestamp of last seen
+    export function clearPeers() { peers = {}; }
+    function addPeer(p: HereIAm) { peers[p.serial] = p; }
+    export function findPeerBySerial(serial: number): HereIAm { return peers[serial]; }
+    export function findPeerByClassId(classId: DeviceClass): HereIAm { for (let k in peers) { let p = peers[(k as any) | 0]; if (p && p.classId == classId) return p; } return null; }
 
-        constructor() {
-            this.serial = 0;
-            this.radioGroup = 0;
-            this.radioChannel = 0;
-            this.classId = "";
-            this.lastSeen = 0;
-        }
-
-        hash(): number {
-            let hash = 0;
-            hash ^= this.serial;
-            hash ^= this.radioGroup << 8;
-            hash ^= this.radioChannel << 16;
-            for (let i = 0; i < this.classId.length; i++) {
-                hash ^= this.classId.charCodeAt(i) << (i % 32);
-            }
-            //hash ^= this.lastSeen << 24;
-            return hash >>> 0; // Ensure unsigned
-        }
-    }
-
-    export class PeerDb {
-
-        private _peers: PeerRecord[] = [];
-        constructor() {
-            this._peers = [];
-        }
-
-        findPeerBySerial(serial: number): PeerRecord {
-            for (let peer of this._peers) {
-                if (peer.serial == serial) {
-                    return peer;
-                }
-            }
-            return undefined;
-        }
-
-
-        findPeerByClassId(classId: string): PeerRecord {
-            for (let peer of this._peers) {
-                if (peer.classId == classId) {
-                    return peer;
-                }
-            }
-            return null;
-        }
-
-        addPeerRecord(serialId: number, classId: string, radioGroup?: number, radioChannel?: number): PeerRecord {
-            let peer = this.findPeerBySerial(serialId);
-
-            if (!peer) {
-                peer = new PeerRecord();
-                peer.serial = serialId;
-                this._peers.push(peer);
-            }
-            let hash = peer.hash();
-            peer.classId = classId;
-            peer.radioGroup = radioGroup !== undefined ? radioGroup : radiop.getGroup();
-            peer.radioChannel = radioChannel !== undefined ? radioChannel : radiop.getChannel();
-            peer.lastSeen = input.runningTime();
-
-            return peer;
-        }
-
-
-        clearPeers() {
-            this._peers = [];
-        }
-
-        getAllPeers(): PeerRecord[] {
-            return this._peers;
-        }
-
-        size(): number {
-            return this._peers.length;
-        }
-
-    }
-
-    export const peerDb = new PeerDb();
-    
+    // Compact HereIAm packet (12 bytes total):
+    //  Byte 0 : packet type (HERE_I_AM)
+    //  Byte 1 : classId (DeviceClass enum)
+    //  Bytes2-3: group (u16)
+    //  Bytes4-5: channel (u16)
+    //  Bytes6-7: flags (u16)
+    //  Bytes8-11: image (u32)
     export class HereIAm extends radiop.RadioPayload {
-        public group: number;
-        public channel: number;
-        public classId: string;
 
+        static readonly PACKET_SIZE = 12;
 
-        static readonly MAX_PAYLOAD = 19;
-        static readonly PACKET_SIZE = HereIAm.MAX_PAYLOAD; // 2 (group) + 2 (channel) + 1 (str len) + up to 14 (string)
-
-        constructor(classId: string, group?: number, channel?: number) {
+        constructor(buf?: Buffer) {
             super(radiop.PayloadType.HERE_I_AM, HereIAm.PACKET_SIZE);
-            this.fromValues(classId, group, channel);
-        }
-
-        fromValues(classId: string, group?: number, channel?: number): void {
-            this.classId = classId;
-            this.group = group !== undefined ? group : radiop.getGroup();
-            this.channel = channel !== undefined ? channel : radiop.getChannel();
-
-            const start = this.BYTE_POS_PAYLOAD_START;
-            // Pack group and channel first
-            this.buffer.setNumber(NumberFormat.UInt16LE, start, this.group);
-            this.buffer.setNumber(NumberFormat.UInt16LE, start + 2, this.channel);
-            // Pack string length
-            let strLen = Math.min(classId.length, HereIAm.MAX_PAYLOAD - 5);
-            this.buffer.setNumber(NumberFormat.UInt8LE, start + 4, strLen);
-            // Pack string bytes using setUint8
-            for (let i = 0; i < strLen; ++i) {
-                this.buffer.setUint8(start + 5 + i, classId.charCodeAt(i));
+            if (buf) this.buffer = buf; else {
+                this.buffer.setNumber(NumberFormat.UInt8LE, 0, radiop.PayloadType.HERE_I_AM);
+                this.classId = myClassId;
+                this.group = radiop.getGroup();
+                this.channel = radiop.getChannel();
+                this.flags = 0;
+                this.image = 0;
             }
         }
+        static fromBuffer(b: Buffer): HereIAm { if (!b || b.length < HereIAm.PACKET_SIZE) return null; return new HereIAm(b); }
+        get classId(): DeviceClass { return this.buffer.getNumber(NumberFormat.UInt8LE, 1); }
+        set classId(v: DeviceClass) { this.buffer.setNumber(NumberFormat.UInt8LE, 1, v & 0xff); }
+        get group(): number { return this.u16(2); }
+        set group(v: number) { this.su16(2, v); }
+        get channel(): number { return this.u16(4); }
+        set channel(v: number) { this.su16(4, v); }
+        get flags(): number { return this.u16(6); }
+        set flags(v: number) { this.su16(6, v); }
+        get image(): number { return this.buffer.getNumber(NumberFormat.UInt32LE, 8); }
+        set image(v: number) { this.buffer.setNumber(NumberFormat.UInt32LE, 8, (v | 0) >>> 0); }
 
-        static fromBuffer(buffer: Buffer): HereIAm {
-            const start = 1; // RadioPayload.BYTE_POS_PAYLOAD_START is 1
-            let group = buffer.getNumber(NumberFormat.UInt16LE, start);
-            let channel = buffer.getNumber(NumberFormat.UInt16LE, start + 2);
-            let strLen = buffer.getNumber(NumberFormat.UInt8LE, start + 4);
-            let chars = [];
-            for (let i = 0; i < strLen; ++i) {
-                chars.push(buffer.getUint8(start + 5 + i));
-            }
-            let classId = "";
-            for (let i = 0; i < chars.length; ++i) {
-                classId += String.fromCharCode(chars[i]);
-            }
-            return new HereIAm(classId, group, channel);
-        }
-
-        get hash(): number {
-            return (this.classId.length > 0 ? this.classId.charCodeAt(0) : 0) ^ (this.serial || 0);
-        }
-
-        get handler(): (payload: HereIAm) => void {
-            return _onReceiveHandler;
-        }
+        get handler(): (payload: HereIAm) => void { return _onReceiveHandler; }
     }
 
     export function defaultOnReceiveHandler(payload: HereIAm, handler?: (payload: HereIAm) => void) {
         lastPayload = payload;
-        peerDb.addPeerRecord(payload.serial, payload.classId,
-            radiop.getGroup(), radiop.getChannel());
+        addPeer(payload);
         if (handler) {
             handler(payload);
         }
@@ -175,11 +82,12 @@ namespace radiop {
     }
 
 
-    function newHereIAm(classId?: string, group?: number, channel?: number): HereIAm {
-        let _classId = classId || myClassId;
-        let _group = group !== undefined ? group : radiop.getGroup();
-        let _channel = channel !== undefined ? channel : radiop.getChannel();
-        return new HereIAm(_classId, _group, _channel);
+    function newHereIAm(classId?: DeviceClass, group?: number, channel?: number): HereIAm {
+        let h = new HereIAm();
+        if (classId !== undefined) h.classId = classId;
+        if (group !== undefined) h.group = group;
+        if (channel !== undefined) h.channel = channel;
+        return h;
     }
     /**
      * Send a HereIAm message to the broadcast channel and group 
@@ -188,13 +96,13 @@ namespace radiop {
     export function broadcastHereIAm() {
         _broadcastHereIAm(newHereIAm());
     }
-            
+
     export function _broadcastHereIAm(hia: HereIAm) {
         let origChannel = radiop.getChannel();
         let origGroup = radiop.getGroup();
         radiop.setChannel(BROADCAST_CHANNEL);
         radiop.setGroup(BROADCAST_GROUP);
-        hia.send(); 
+        hia.send();
 
         radiop.setChannel(origChannel);
         radiop.setGroup(origGroup);
@@ -206,8 +114,8 @@ namespace radiop {
      */
     //% blockId=init_beacon block="initialize beacon with classId %classId"
     //% group='Beacon'
-    export function initBeacon(classId: string) {
-        
+    export function initBeacon(classId: DeviceClass) {
+
         if (_beaconInit) {
             return;
         }
@@ -215,7 +123,7 @@ namespace radiop {
 
 
         myClassId = classId;
-      
+
 
         let lastChannel: number = undefined
         let lastGroup: number = undefined
@@ -225,23 +133,19 @@ namespace radiop {
             while (true) {
                 if (_runBeacon) {
                     let hereIAm = newHereIAm();
-
                     hereIAm.send(); // Send to my private radio
-
-                    // If the channel or group has changed, broadcast the HereIAm message
-                    // to the broadcast channel and group
                     if (lastChannel !== radiop.getChannel() || lastGroup !== radiop.getGroup() || bCountDown <= 0) {
                         lastChannel = radiop.getChannel();
                         lastGroup = radiop.getGroup();
                         _broadcastHereIAm(hereIAm);
-                        bCountDown = 10; // Reset countdown
+                        bCountDown = 10;
                     }
                     bCountDown--;
                 }
-                basic.pause(3000);
+                basic.pause(2000);
             }
         });
-        
+
     }
 
     /** 
@@ -269,7 +173,8 @@ namespace radiop {
     * and is collecting HearIAm into the PeerDb.     */
 
     function testChannel(i: number, channel: number, group: number): Boolean {
-        radiop.setGroup(group);  // clears the PeerDb. 
+        clearPeers();
+        radiop.setGroup(group);
         radiop.setChannel(channel);
 
         let startTime = input.runningTime();
@@ -277,11 +182,8 @@ namespace radiop {
 
         // Poll the PeerDb for up to 5 seconds
         while (input.runningTime() - startTime < 5000) {
-            let peer: PeerRecord = peerDb.findPeerByClassId(myClassId);
-
-            if (peer) {
-                return false;
-            }
+            let peer = findPeerByClassId(myClassId);
+            if (peer) return false;
             basic.pause(200);
         }
 
@@ -305,7 +207,7 @@ namespace radiop {
         * so the initial request will always be the same. */
         let [channel, group] = radiop.getInitialRadioRequest();
 
-        
+
         while (true) {
             radioIcon.showImage(0); // Show radio icon to indicate negotiation started
 
@@ -317,7 +219,7 @@ namespace radiop {
                 basic.clearScreen();
 
                 basic.showIcon(IconNames.Yes);
-            
+
                 return;
             }
 

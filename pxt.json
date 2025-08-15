@@ -17,7 +17,9 @@
         "src/main.ts"
     ],
     "testFiles": [
-        "test/test.ts"
+        "test/test.ts",
+        "test/testJoystick.ts",
+        "test/testHereIAm.ts"
     ],
     "targetVersions": {
         "target": "8.0.13",

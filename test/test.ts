@@ -12,3 +12,6 @@ serial.writeLine("Starting RadioExt tests...");
 //radioptest.testBotStatus();
 //radioptest.testSendBotStatus();]
 //radioptest.testReceiveBotStatus();
+
+radioptest.testJoystickSendRecieve();
+

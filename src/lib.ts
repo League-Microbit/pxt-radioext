@@ -53,4 +53,36 @@ namespace radiop {
 
         return [channel, group];
     }
+
+
+    // imageToInt: compress a 5x5 Image into a 25-bit number (bit index = y*5 + x, LSB = (0,0))
+    export function imageToInt(img: Image): number {
+        if (!img) return 0;
+        let bits = 0;
+        for (let y = 0; y < 5; y++) {
+            for (let x = 0; x < 5; x++) {
+                if (img.pixel(x, y)) bits |= (1 << (y * 5 + x));
+            }
+        }
+        return bits >>> 0;
+    }
+
+    // intoToImage: expand a 25-bit number into a 5x5 Image (inverse of imageToInt)
+    export function intoToImage(bits: number): Image {
+        let img = images.createImage(`
+.....
+.....
+.....
+.....
+.....`);
+        bits = bits >>> 0;
+        for (let y = 0; y < 5; y++) {
+            for (let x = 0; x < 5; x++) {
+                let bit = (y * 5 + x);
+                if (bits & (1 << bit)) img.setPixel(x, y, true);
+            }
+        }
+        return img;
+    }
+
 }

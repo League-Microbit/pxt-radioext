@@ -49,146 +49,58 @@ namespace radiop {
         return Math.max(min, Math.min(max, x));
     }
 
-    /**
-     * Joystick payload with x, y, buttons, and accelerometer data
-     */
+    // Buffer-backed joystick payload; all fields accessed via getters/setters to minimize RAM/flash.
+    // Layout (18 bytes total):
+    //  Byte  0 : packet type (radiop.PayloadType.JOY)
+    //  Bytes 1-2: X (UInt16LE) 0-1023 (stored absolute)
+    //  Bytes 3-4: Y (UInt16LE) 0-1023 (stored absolute)
+    //  Byte  5 : Buttons bitfield (bits 0..7 map to JoystickButton A..F etc.)
+    //  Bytes 6-7: accelX (Int16LE) clipped to [-1023,1023]
+    //  Bytes 8-9: accelY (Int16LE) clipped to [-1023,1023]
+    //  Bytes 10-11: accelZ (Int16LE) clipped to [-1023,1023]
+    //  Bytes 12-13: datau16 (UInt16LE) generic 16-bit data
+    //  Bytes 14-17: image (UInt32LE) generic 32-bit status / icon bitmap
+    // Offsets are kept as raw literals in code for smallest image size. Using const variables could add indirections;
+    // a const enum would inline but simple comments avoid any risk while documenting the layout.
     export class JoyPayload extends radiop.RadioPayload {
-
-        public x: number;
-        public y: number;
-        public buttons: number[];
-        public accelX: number;
-        public accelY: number;
-        public accelZ: number;
-
-        static PACKET_SIZE = 12; // Size of the payload in bytes
-
-        constructor(x: number, y: number, buttons: number[], accelX: number, accelY: number, accelZ: number) {
+    static PACKET_SIZE = 18; // 1 +2 +2 +1 +2 +2 +2 +2 +4
+        constructor(buf?: Buffer) {
             super(radiop.PayloadType.JOY, JoyPayload.PACKET_SIZE);
-            this.fromValues(x, y, buttons, accelX, accelY, accelZ);
+            if (buf) this.buffer = buf; else this.buffer.setNumber(NumberFormat.UInt8LE,0,radiop.PayloadType.JOY);
         }
+        static fromBuffer(b: Buffer): JoyPayload { if (!b || b.length < JoyPayload.PACKET_SIZE) return null; return new JoyPayload(b); }
 
-        /**
-         * Create a JoyPayload from a received buffer
-         */
-        static fromBuffer(buffer: Buffer): JoyPayload {
-            // Extract values from buffer
-            let x = Math.abs(buffer.getNumber(NumberFormat.UInt16LE, 1));
-            let y = Math.abs(buffer.getNumber(NumberFormat.UInt16LE, 3));
-
-
-            // Extract button bits
-            let buttonBits = buffer.getNumber(NumberFormat.UInt8LE, 5);
-            let buttons: number[] = [];
-            for (let i = 0; i < 8; i++) {
-                if (buttonBits & (1 << i)) {
-                    buttons.push(i);
-                }
-            }
-            
-            let accelX = buffer.getNumber(NumberFormat.Int16LE, 6);
-            let accelY = buffer.getNumber(NumberFormat.Int16LE, 8);
-            let accelZ = buffer.getNumber(NumberFormat.Int16LE, 10);
-
-            return new JoyPayload(x, y, buttons, accelX, accelY, accelZ);
-        }
-
-        private fromValues(x: number, y: number, buttons: number[], accelX: number, accelY: number, accelZ: number): void {
-            // Store values
-            this.x = clip(Math.abs(x), 0, 1023);
-            this.y = clip(Math.abs(y), 0, 1023);
-            this.buttons = buttons;
-            this.accelX = clip(accelX, -1023, 1023);
-            this.accelY = clip(accelY, -1023, 1023);
-            this.accelZ = clip(accelZ, -1023, 1023);
-
-
-            // Build the buffer
-            this.buffer.setNumber(NumberFormat.UInt16LE, 1, this.x);
-            this.buffer.setNumber(NumberFormat.UInt16LE, 3, this.y);
-            
-            // Convert button array to single byte with bits set
-            let buttonBits = 0;
-            for (let i = 0; i < Math.min(this.buttons.length, 8); i++) {
-                if (this.buttons[i] < 8) {
-                    buttonBits |= (1 << this.buttons[i]);
-                }
-            }
-            this.buffer.setNumber(NumberFormat.UInt8LE, 5, buttonBits);
-            
-            // Add accelerometer values
-            this.buffer.setNumber(NumberFormat.Int16LE, 6, this.accelX);
-            this.buffer.setNumber(NumberFormat.Int16LE, 8, this.accelY);
-            this.buffer.setNumber(NumberFormat.Int16LE, 10, this.accelZ);
-        }
-
-        get payloadLength() {
-            return this.buffer.length;
-        }
-
-        get hash(): number {
-            // Simple hash based on x, y, buttons, and accelerometer values
-            let hash = 0;
-            hash ^= this.x;
-            hash ^= this.y;
-            for (let button of this.buttons) {
-                hash ^= (1 << button);
-            }
-            hash ^= this.accelX;
-            hash ^= this.accelY;
-            hash ^= this.accelZ;
-            return hash;
-        }
-
-
-        public buttonPressed(button: JoystickButton): boolean {
-            return this.buttons.indexOf(button) !== -1;
-        }
-
-        get handler(): (payload: radiop.RadioPayload) => void {
-            return _onReceiveJoyHandler;
-        }
-    }
-
-    
-
-    /**
-     * Send the current joystick state over radio only if it is different from the previous one
-     */
-    //% blockId=joystick_send_if_changed block="send joystick state if changed"
-    //% group="Joystick"
-
-    export function sendIfChanged(jp: radiop.JoyPayload): boolean {
-
-        let hasChanged = ( !_lastSentPayload || _lastSentPayload.hash != jp.hash);
-        if ( hasChanged) {
-            jp.send();
-        }
-        _lastSentPayload = jp;
-
-        return hasChanged;
-    }
-
-    /**
-     * Run code when a joystick message is received
-     */
-    //% blockId=joystick_on_receive block="on receive joystick"
-    //% group="Joystick"
-    //% weight=100
-    export function onReceiveJoystickMessage(handler: (payload: radiop.JoyPayload) => void) {
-        radiop.initDefaults(); // Ensure radio is initialized
+        get x(): number { return this.u16(1); }
+        set x(v: number) { this.su16(1,clip(Math.abs(v),0,1023)|0); }
+        get y(): number { return this.u16(3); }
+        set y(v: number) { this.su16(3, clip(Math.abs(v), 0, 1023) | 0); }
         
-        _onReceiveJoyHandler = function (payload: JoyPayload) {
-            lastJoyPayload = payload;
-            handler(payload);
-        };
+        private gb(): number { return this.buffer.getNumber(NumberFormat.UInt8LE,5); }
+        private sb(v: number) { this.buffer.setNumber(NumberFormat.UInt8LE,5,v&0xff); }
+        
+        get accelX(): number { return this.i16(6); }
+        set accelX(v: number) { this.si16(6, clip(v,-1023,1023)|0); }
+        get accelY(): number { return this.i16(8); }
+        set accelY(v: number) { this.si16(8, clip(v, -1023, 1023) | 0); }
+        get accelZ(): number { return this.i16(10); }
+        set accelZ(v: number) { this.si16(10, clip(v, -1023, 1023) | 0); }
+
+        get datau16(): number { return this.u16(12); }
+        set datau16(v: number) { this.su16(12, v & 0xffff); }
+
+        get image(): number { return this.buffer.getNumber(NumberFormat.UInt32LE,14); }
+        set image(v: number) { this.buffer.setNumber(NumberFormat.UInt32LE,14,(v|0)>>>0); }
+                
+        buttonPressed(btn: JoystickButton): boolean { return (this.gb() & (1 << btn)) != 0; }
+        setButton(btn: JoystickButton, on: boolean) { let bits=this.gb(); if (on) bits|=(1<<btn); else bits&=~(1<<btn); this.sb(bits); }
+        clearButtons(){ this.sb(0); }
+        buttonsArray(): number[]{ let r:number[]=[]; let bits=this.gb(); for (let i=0;i<8;i++) if (bits&(1<<i)) r.push(i); return r; }
+        
+        get handler(): (payload: radiop.RadioPayload) => void { return _onReceiveJoyHandler; }
+        get payloadLength() { return JoyPayload.PACKET_SIZE; }
     }
 
-    export function sendJoyPayload(x: number, y: number, buttons: number[], accelX: number, accelY: number, accelZ: number): void {
-        radiop.initDefaults();
-        let payload = new radiop.JoyPayload(x, y, buttons, accelX, accelY, accelZ);
-        radio.sendBuffer(payload.getBuffer());
-    }   
+
 
     //% blockId=joystick_value block="joystick $payload value $value"
     //% group="Joystick"
@@ -201,19 +113,51 @@ namespace radiop {
             case JoystickValue.AccelX: return payload.accelX;
             case JoystickValue.AccelY: return payload.accelY;
             case JoystickValue.AccelZ: return payload.accelZ;
-            default: return 0;
         }
+        return 0;
     }
 
     /**
      * Check if a button is pressed
      */
-    //% blockId=joystick_button_pressed block="joystick button %button pressed"
+    //% blockId=joystick_button_pressed block="joystick $payload button $button pressed"
     //% group="Joystick"
     //% weight=80
-    export function buttonPressed(button: JoystickButton): boolean {
-        if (!lastJoyPayload) return false;
-        return lastJoyPayload.buttons.indexOf(button) !== -1;
+    export function buttonPressed(payload: JoyPayload, button: JoystickButton): boolean {
+        if (!payload) return false;
+        return payload.buttonPressed(button);
+    }
+
+
+    /** Send joystick state if changed */
+    export function sendIfChanged(jp: radiop.JoyPayload): boolean {
+        let hasChanged = (!_lastSentPayload || _lastSentPayload.hash != jp.hash);
+        if (hasChanged) jp.send();
+        _lastSentPayload = jp;
+        return hasChanged;
+    }
+
+    export function sendJoyPayload(x: number, y: number, buttons: number[], accelX: number, accelY: number, accelZ: number): void {
+        radiop.initDefaults();
+        let p = new radiop.JoyPayload();
+        p.x = x; p.y = y; p.accelX = accelX; p.accelY = accelY; p.accelZ = accelZ;
+        let bits = 0; let n = buttons?buttons.length:0; for (let i=0;i<n && i<8;i++){ let bt=buttons[i]; if(bt>=0&&bt<8) bits |= (1<<bt);} 
+        p["buffer"].setNumber(NumberFormat.UInt8LE,5,bits);
+        radio.sendBuffer(p.getBuffer());
+    }   
+
+    /**
+     * Run code when a joystick message is received
+     */
+    //% blockId=joystick_on_receive block="on receive joystick"
+    //% group="Joystick"
+    //% weight=100
+    export function onReceiveJoystickMessage(handler: (payload: radiop.JoyPayload) => void) {
+
+        _onReceiveJoyHandler = function (payload: JoyPayload) {
+            lastJoyPayload = payload;
+            handler(payload);
+        };
     }
 
 
