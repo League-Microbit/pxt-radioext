@@ -9,6 +9,7 @@
     "files": [
         "src/radiop.ts",
         "src/joystick.ts",
+        "src/botstate.ts",
         "src/negotiate.ts",
         "src/lib.ts",
         "README.md",

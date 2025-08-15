@@ -73,7 +73,7 @@ namespace radiop {
 
         readonly BYTE_POS_PACKET_TYPE = 0; // Position of packet type in the buffer
         readonly BYTE_POS_PAYLOAD_START = 1; // Position of payload start in the buffer
-        static readonly MAX_PACKET_SIZE = 19; // Maximum payload size in bytes (micro:bit radio limit)
+        static readonly MAX_PACKET_SIZE = 19; // Max size of a radio buffer ( not the whole packet, which is 32 bytes )
 
 
         public packet: radio.RadioPacket = undefined; 
@@ -186,8 +186,8 @@ namespace radiop {
                 return radiop.JoyPayload.fromBuffer(buffer);
             case PayloadType.HERE_I_AM:
                 return radiop.HereIAm.fromBuffer(buffer);
-            //case PayloadType.BOT_STATUS:
-            //    return radiop.BotStatusMessage.fromBuffer(buffer);
+            case PayloadType.BOT_STATUS:
+                return radiop.BotStatePayload.fromBuffer(buffer);
         }
 
         return undefined;
@@ -246,6 +246,7 @@ namespace radiop {
  
         // Set up radio packet received handler
         radio.onReceivedBuffer(function (buffer: Buffer) {
+            
             let payload = extractPayload(buffer);
 
             if (!payload) return;

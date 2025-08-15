@@ -24,7 +24,11 @@ namespace radiop {
         //% block="Accelerometer Z"
         AccelZ = 4,
         //% block="Data"
-        Data = 5
+        Data = 5,
+        //% block="Tone"
+        Tone = 6,
+        //% block="Duration"
+        Duration = 7
     }
 
     /**
@@ -52,31 +56,38 @@ namespace radiop {
     }
 
     // Buffer-backed joystick payload; all fields accessed via getters/setters to minimize RAM/flash.
-    // Layout (18 bytes total):
-    //  Byte  0 : packet type (radiop.PayloadType.JOY)
+    // Layout (20 bytes total):
+    //  Byte   0 : packet type (radiop.PayloadType.JOY)
     //  Bytes 1-2: X (UInt16LE) 0-1023 (stored absolute)
     //  Bytes 3-4: Y (UInt16LE) 0-1023 (stored absolute)
-    //  Byte  5 : Buttons bitfield (bits 0..7 map to JoystickButton A..F etc.)
+    //  Byte   5 : Buttons bitfield (bits 0..7 map to JoystickButton A..F etc.)
     //  Bytes 6-7: accelX (Int16LE) clipped to [-1023,1023]
     //  Bytes 8-9: accelY (Int16LE) clipped to [-1023,1023]
     //  Bytes 10-11: accelZ (Int16LE) clipped to [-1023,1023]
     //  Bytes 12-13: datau16 (UInt16LE) generic 16-bit data
-    //  Bytes 14-17: image (UInt32LE) generic 32-bit status / icon bitmap
+    //  Bytes 14-17: image (UInt32LE) generic 32-bit status / icon bitmap (25 bits used)
+    //  Byte  18 : tone (UInt8LE) (e.g. note or frequency index)
+    //  Byte  19 : duration (UInt8LE) (e.g. ms / scaled units)
     // Offsets are kept as raw literals in code for smallest image size. Using const variables could add indirections;
     // a const enum would inline but simple comments avoid any risk while documenting the layout.
     export class JoyPayload extends radiop.RadioPayload {
-    static PACKET_SIZE = 18; // 1 +2 +2 +1 +2 +2 +2 +2 +4
+    static readonly PACKET_SIZE: number = 20; // 1 +2 +2 +1 +2 +2 +2 +2 +4 +1 +1
         constructor(buf?: Buffer) {
             super(radiop.PayloadType.JOY, JoyPayload.PACKET_SIZE);
-            if (buf) this.buffer = buf; else this.buffer.setNumber(NumberFormat.UInt8LE,0,radiop.PayloadType.JOY);
+            if (buf) this.buffer = buf;
+            else this.buffer.setNumber(NumberFormat.UInt8LE, 0, radiop.PayloadType.JOY);
         }
-        static fromBuffer(b: Buffer): JoyPayload { if (!b || b.length < JoyPayload.PACKET_SIZE) return null; return new JoyPayload(b); }
+        static fromBuffer(b: Buffer): JoyPayload {
+            if (!b || b.length < JoyPayload.PACKET_SIZE) return null;
+            return new JoyPayload(b);
+        }
 
         get x(): number { return this.u16(1); }
         set x(v: number) { this.su16(1,clip(Math.abs(v),0,1023)|0); }
         get y(): number { return this.u16(3); }
         set y(v: number) { this.su16(3, clip(Math.abs(v), 0, 1023) | 0); }
         
+        // Get and set the button values. 
         private gb(): number { return this.buffer.getNumber(NumberFormat.UInt8LE,5); }
         private sb(v: number) { this.buffer.setNumber(NumberFormat.UInt8LE,5,v&0xff); }
         
@@ -87,32 +98,42 @@ namespace radiop {
         get accelZ(): number { return this.i16(10); }
         set accelZ(v: number) { this.si16(10, clip(v, -1023, 1023) | 0); }
 
+
+        // datau16 at 12-13
         get datau16(): number { return this.u16(12); }
         set datau16(v: number) { this.su16(12, v & 0xffff); }
 
-    // Raw 25-bit (stored in 32-bit) image value
-    get image(): number { return this.buffer.getNumber(NumberFormat.UInt32LE,14); }
-    set image(v: number) { this.buffer.setNumber(NumberFormat.UInt32LE,14,(v|0)>>>0); }
+        // tone/duration at 18,19
+        get tone(): number { return this.buffer.getNumber(NumberFormat.UInt8LE, 18); }
+        set tone(v: number) { this.buffer.setNumber(NumberFormat.UInt8LE, 18, v & 0xff); }
 
-    /** Set image from an IconNames enum value */
-    setIcon(icon: IconNames) {
-        if (icon !== undefined && icon !== null) this.image = radiop.imageToInt(images.iconImage(icon));
-    }
-        
-    /** Set image from a 5x5 Image object */
-    setImage(img: Image) { if (img) this.image = radiop.imageToInt(img); }
-    /** Get image decoded as 5x5 Image */
-    getImage(): Image { return radiop.intoToImage(this.image); }
-                
+        get duration(): number { return this.buffer.getNumber(NumberFormat.UInt8LE, 19); }
+        set duration(v: number) { this.buffer.setNumber(NumberFormat.UInt8LE, 19, v & 0xff); }
+
+        // Raw 25-bit (stored in 32-bit) image value
+        get image(): number { return this.buffer.getNumber(NumberFormat.UInt32LE,14); }
+        set image(v: number) { this.buffer.setNumber(NumberFormat.UInt32LE,14,(v|0)>>>0); }
+
+        // (bytes 14-17 image already defined below; bytes 18-19 tone/duration)
+
+        /** Set image from an IconNames enum value */
+        setIcon(icon: IconNames) {
+            if (icon !== undefined && icon !== null) this.image = radiop.imageToInt(images.iconImage(icon));
+        }
+            
+        /** Set image from a 5x5 Image object */
+        setImage(img: Image) { if (img) this.image = radiop.imageToInt(img); }
+        /** Get image decoded as 5x5 Image */
+        getImage(): Image { return radiop.intoToImage(this.image); }
+                    
         buttonPressed(btn: JoystickButton): boolean { return (this.gb() & (1 << btn)) != 0; }
         setButton(btn: JoystickButton, on: boolean) { let bits=this.gb(); if (on) bits|=(1<<btn); else bits&=~(1<<btn); this.sb(bits); }
-        clearButtons(){ this.sb(0); }
-        buttonsArray(): number[]{ let r:number[]=[]; let bits=this.gb(); for (let i=0;i<8;i++) if (bits&(1<<i)) r.push(i); return r; }
-        
+            clearButtons(){ this.sb(0); }
+            buttonsArray(): number[]{ let r:number[]=[]; let bits=this.gb(); for (let i=0;i<8;i++) if (bits&(1<<i)) r.push(i); return r; }
+            
         get handler(): (payload: radiop.RadioPayload) => void { return _onReceiveJoyHandler; }
         get payloadLength() { return JoyPayload.PACKET_SIZE; }
     }
-
 
 
     //% blockId=joystick_value block="joystick $payload value $value"
@@ -127,6 +148,8 @@ namespace radiop {
             case JoystickValue.AccelY: return payload.accelY;
             case JoystickValue.AccelZ: return payload.accelZ;
             case JoystickValue.Data: return payload.datau16;
+            case JoystickValue.Tone: return payload.tone;
+            case JoystickValue.Duration: return payload.duration;
         }
         return 0;
     }
@@ -161,7 +184,7 @@ namespace radiop {
     //% weight=60
     export function getData(payload: JoyPayload): number {
         if (!payload) return 0;
-        return payload.datau16;
+    return payload.datau16;
     }
 
 
