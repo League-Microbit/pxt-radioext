@@ -127,6 +127,9 @@ namespace radiop {
             return 0;
         }
 
+
+        
+
         get handler(): (payload: RadioPayload) => void {
             return undefined;
         }

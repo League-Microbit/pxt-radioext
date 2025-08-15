@@ -45,6 +45,10 @@ namespace radiop {
         F = 6
     }
 
+    function clip(x: number, min: number, max: number): number {
+        return Math.max(min, Math.min(max, x));
+    }
+
     /**
      * Joystick payload with x, y, buttons, and accelerometer data
      */
@@ -72,11 +76,6 @@ namespace radiop {
             let x = Math.abs(buffer.getNumber(NumberFormat.UInt16LE, 1));
             let y = Math.abs(buffer.getNumber(NumberFormat.UInt16LE, 3));
 
-            // There was a negative somewhere ...
-            if (x > 65000) x = 0; // Clamp to valid range
-            if (x > 1023) x = 1023; // Clamp to valid range
-            if (y > 65000) y = 0; // Clamp to valid range
-            if (y > 1023) y = 1023; // Clamp to valid range
 
             // Extract button bits
             let buttonBits = buffer.getNumber(NumberFormat.UInt8LE, 5);
@@ -96,12 +95,13 @@ namespace radiop {
 
         private fromValues(x: number, y: number, buttons: number[], accelX: number, accelY: number, accelZ: number): void {
             // Store values
-            this.x = Math.abs(x);
-            this.y = Math.abs(y);
+            this.x = clip(Math.abs(x), 0, 1023);
+            this.y = clip(Math.abs(y), 0, 1023);
             this.buttons = buttons;
-            this.accelX = accelX;
-            this.accelY = accelY;
-            this.accelZ = accelZ;
+            this.accelX = clip(accelX, -1023, 1023);
+            this.accelY = clip(accelY, -1023, 1023);
+            this.accelZ = clip(accelZ, -1023, 1023);
+
 
             // Build the buffer
             this.buffer.setNumber(NumberFormat.UInt16LE, 1, this.x);
