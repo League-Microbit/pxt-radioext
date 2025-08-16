@@ -27,8 +27,18 @@ namespace radiop {
 
     export function clearPeers() { peers = {}; }
     function addPeer(p: HereIAm) { peers[p.serial] = p; }
-    export function findPeerBySerial(serial: number): HereIAm { return peers[serial]; }
-    export function findPeerByClassId(classId: DeviceClass): HereIAm { for (let k in peers) { let p = peers[(k as any) | 0]; if (p && p.classId == classId) return p; } return null; }
+    export function findPeerBySerial(serial: number): HereIAm {
+        return peers[serial];
+    }
+    export function findPeerByClassId(classId: DeviceClass): HereIAm {
+        const keys = Object.keys(peers);
+        for (let i = 0; i < keys.length; i++) {
+            const k = (keys[i] as any) | 0;
+            const p = peers[k];
+            if (p && p.classId == classId) return p;
+        }
+        return null;
+    }
 
     // Compact HereIAm packet (12 bytes total):
     //  Byte 0 : packet type (HERE_I_AM)
