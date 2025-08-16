@@ -168,11 +168,15 @@ namespace radiop {
             this.buffer.setNumber(format, byteOffset, v);
         }
 
-    // Short numeric accessors to reduce repetition and possibly flash size
-    u16(off: number): number { return this.buffer.getNumber(NumberFormat.UInt16LE, off); }
-    su16(off: number, v: number) { this.buffer.setNumber(NumberFormat.UInt16LE, off, v & 0xffff); }
-    i16(off: number): number { return this.buffer.getNumber(NumberFormat.Int16LE, off); }
-    si16(off: number, v: number) { this.buffer.setNumber(NumberFormat.Int16LE, off, v); }
+        // Short numeric accessors to reduce repetition and possibly flash size
+        u16(off: number): number { return this.buffer.getNumber(NumberFormat.UInt16LE, off); }
+        su16(off: number, v: number) { this.buffer.setNumber(NumberFormat.UInt16LE, off, v & 0xffff); }
+        i16(off: number): number { return this.buffer.getNumber(NumberFormat.Int16LE, off); }
+        si16(off: number, v: number) { this.buffer.setNumber(NumberFormat.Int16LE, off, v); }
+
+        u8(off: number): number { return this.buffer.getNumber(NumberFormat.UInt8LE, off); }
+        su8(off: number, v: number) { this.buffer.setNumber(NumberFormat.UInt8LE, off, v & 0xff); }
+
 
 
     }
@@ -180,7 +184,9 @@ namespace radiop {
     /* Construct a payload from a buffer. This is the central
     * place to add definitions for new payloads */
     function extractPayload(buffer: Buffer): RadioPayload {
+
         let packetType = buffer.getNumber(NumberFormat.UInt8LE, 0);
+
         switch (packetType) {
             case PayloadType.JOY:
                 return radiop.JoyPayload.fromBuffer(buffer);
@@ -218,15 +224,12 @@ namespace radiop {
         if (initialized) {
             if (channel !== _channel || group !== _group) {
                 // If channel or group changed, reinitialize
-                // removed serial logging (reinitializing)
+          
                 setGroup(group);
                 setChannel(channel);
                 radio.setTransmitPower(power);
                 broadcastHereIAm(); // Resend HereIAm message
-            } else {
-                // removed serial logging (already initialized)
             }
-
             return;
         }
         
@@ -249,12 +252,15 @@ namespace radiop {
             
             let payload = extractPayload(buffer);
 
+            let packetType = buffer.getNumber(NumberFormat.UInt8LE, 0);
+
             if (!payload) return;
 
             payload.packet = radio.lastPacket;
             
             // Handler specific to the payload type
             let handler = payload.handler;
+
             if (handler) {
                 // handler for specific payload type
                 handler(payload);

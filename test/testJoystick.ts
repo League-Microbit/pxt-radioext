@@ -20,7 +20,7 @@ namespace radioptest {
 		jp.accelX = randint(-1023, 1023);
 		jp.accelY = randint(-1023, 1023);
 		jp.accelZ = randint(-1023, 1023);
-		jp.datau16 = randint(0, 0xffff) & 0xffff;
+		jp.datau8 = randint(0, 0xffff) & 0xffff;
 		// Random icon image
 		const icons: IconNames[] = [
 			IconNames.Heart, IconNames.SmallHeart, IconNames.Happy, IconNames.Sad,
@@ -49,7 +49,7 @@ namespace radioptest {
 		let ax = jp1.accelX;
 		let ay = jp1.accelY;
 		let az = jp1.accelZ;
-		let datau16 = jp1.datau16;
+		let datau16 = jp1.datau8;
 		let image = jp1.image;
 		let tone = jp1.tone;
 		let duration = jp1.duration;
@@ -68,7 +68,7 @@ namespace radioptest {
 		if (jp2.accelX != ax) ok = false;
 		if (jp2.accelY != ay) ok = false;
 		if (jp2.accelZ != az) ok = false;
-		if (jp2.datau16 != datau16) ok = false;
+		if (jp2.datau8 != datau16) ok = false;
 		if (jp2.image != image) ok = false;
 		if (jp2.tone != tone) ok = false;
 		if (jp2.duration != duration) ok = false;
@@ -79,7 +79,7 @@ namespace radioptest {
 
 		serial.writeLine("Joystick test hash1=" + h1 + " hash2=" + h2);
 		serial.writeLine("x=" + jp2.x + " y=" + jp2.y + " ax=" + jp2.accelX + " ay=" + jp2.accelY + " az=" + jp2.accelZ);
-		serial.writeLine("datau16=" + jp2.datau16 + " image=" + jp2.image + " tone=" + jp2.tone + " dur=" + jp2.duration + " buttonsMask=" + btnMask);
+		serial.writeLine("datau16=" + jp2.datau8 + " image=" + jp2.image + " tone=" + jp2.tone + " dur=" + jp2.duration + " buttonsMask=" + btnMask);
 		
 		if (ok) basic.showIcon(IconNames.Yes);
 		else basic.showIcon(IconNames.No);
@@ -105,7 +105,7 @@ namespace radioptest {
 		radiop.onReceiveJoystickMessage(function (jp) {
 			logJoyPayload("RX", jp);
 			// Decode 25-bit image value back to 5x5 and display
-			radiop.intoToImage(jp.image).showImage(0);
+			radiop.intToImage(jp.image).showImage(0);
 		});
 
 		// Infinite send loop creating random JoyPayloads
@@ -116,10 +116,9 @@ namespace radioptest {
 			// Optionally could show the image or play tone here
 			basic.pause(1000);
 		}
-
-
 	}
 
+	
 
 
 }

@@ -68,7 +68,7 @@ namespace radiop {
     }
 
     // intoToImage: expand a 25-bit number into a 5x5 Image (inverse of imageToInt)
-    export function intoToImage(bits: number): Image {
+    export function intToImage(bits: number): Image {
         let img = images.createImage(`
 .....
 .....
