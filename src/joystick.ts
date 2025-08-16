@@ -55,6 +55,8 @@ namespace radiop {
         return Math.max(min, Math.min(max, x));
     }
 
+
+
     // Buffer-backed joystick payload; all fields accessed via getters/setters to minimize RAM/flash.
     // Layout (20 bytes total):
     //  Byte   0 : packet type (radiop.PayloadType.JOY)
@@ -104,6 +106,16 @@ namespace radiop {
         get tone(): number { return this.buffer.getNumber(NumberFormat.UInt8LE, 12); }
         set tone(v: number) { this.buffer.setNumber(NumberFormat.UInt8LE, 12, v & 0xff); }
 
+        /** Set octave and note 
+         *  Middle C is Octave 4, Note 1
+         *  Concert A is Octave 4, Note 10
+         *  There are no frequencies defined for octave 0
+         */
+        setOctaveNote(octave: number, note: number) {
+            this.tone = (octave << 4) | (note & 0x0f);
+        }
+
+        /* Durations are in 10s of ms, so 1/2 sec is 50 */
         get duration(): number { return this.buffer.getNumber(NumberFormat.UInt8LE, 13); }
         set duration(v: number) { this.buffer.setNumber(NumberFormat.UInt8LE, 13, v & 0xff); }
 
@@ -111,6 +123,7 @@ namespace radiop {
         get image(): number { return this.buffer.getNumber(NumberFormat.UInt32LE,14); }
         set image(v: number) { this.buffer.setNumber(NumberFormat.UInt32LE, 14, (v | 0) >>> 0); }
 
+        // datau8 now repurposed: if tone in Tone1..Tone10 treat as 8-bit note index else returns raw
         get datau8(): number { return this.u8(12); }
         set datau8(v: number) { this.su8(12, v & 0xff); }
 
@@ -129,9 +142,29 @@ namespace radiop {
         clearButtons(){ this.sb(0); }
         buttonsArray(): number[]{ let r:number[]=[]; let bits=this.gb(); for (let i=0;i<8;i++) if (bits&(1<<i)) r.push(i); return r; }
             
+  
+        /** 
+         * Interpret tone enum and play correct sound; duration only for tones. We only have one byte
+         * so we have to compress. The first 4 bits are the octave and the next 4 bits are
+         * the notes in the octave
+         * */
+        playSound() {
+            let octave = (this.tone >> 4) & 0x0f;
+            let note = this.tone & 0x0f;
+            let freq = music.getFrequencyForNote(octave, note);
+            let beatMs = this.duration * 10;
+
+            if (octave > 0 && octave < 8 && note >= 0 && note < 12) {
+                music.playTone(freq, beatMs);
+            }
+        }
+
         get handler(): (payload: radiop.RadioPayload) => void { return _onReceiveJoyHandler; }
         get payloadLength() { return JoyPayload.PACKET_SIZE; }
+
+
     }
+
 
     //% blockId=joystick_value block="joystick $payload value $value"
     //% group="Joystick"
@@ -149,6 +182,8 @@ namespace radiop {
             case JoystickValue.Duration: return payload.duration;
         }
         return 0;
+        
+        
     }
 
     /**
@@ -183,6 +218,8 @@ namespace radiop {
         if (!payload) return 0;
     return payload.datau8;
     }
+
+    // (Audio helper blocks removed for simplicity.)
 
 
     /** Send joystick state if changed */

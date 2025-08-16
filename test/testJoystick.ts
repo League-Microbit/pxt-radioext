@@ -8,8 +8,8 @@ namespace radioptest {
 				btns = btns + b + ",";
 			}
 		}
-	
-		serial.writeLine(" " + prefix + " Joy x=" + jp.x + " y=" + jp.y + " btns=" + btns);
+
+		serial.writeLine(" " + prefix + " Joy x=" + jp.x + " y=" + jp.y + " btns=" + btns + " tone=" + jp.tone + " dur=" + jp.duration);
 	}
 
 	/** Create a randomized JoyPayload with reasonable ranges for fields */
@@ -34,16 +34,16 @@ namespace radioptest {
 		for (let b = radiop.JoystickButton.A; b <= radiop.JoystickButton.F; b++) {
 			jp.setButton(b as radiop.JoystickButton, (btnMask & (1 << b)) != 0);
 		}
-		// Random tone (MIDI-ish range 40-100) and duration (50-400 ms capped to 255)
-		jp.tone = randint(40, 100);
-		jp.duration = Math.min(255, randint(50, 400));
+		// Random sound: choose a MIDI-like note number (C3..C6 ~ 48..84) and duration in ms (100..600)
+		jp.tone = randint(48, 107) & 0xff; // stored raw
+		jp.duration = randint(500,1000) / 10; // Duration is in 10s of ms
 		return jp;
 	}
 	// Test function for JoyPayload round-trip via shared buffer
 	export function testJoystickPayload() {
 		radiop.initDefaults();
 
-		let jp1 = createRandomJoyPayload();
+		let jp1 = createRandomJoyPayload();	
 		let x = jp1.x;
 		let y = jp1.y;
 		let ax = jp1.accelX;
@@ -101,24 +101,83 @@ namespace radioptest {
 		radiop.initDefaults();
 		radiop.initBeacon(cls as radiop.DeviceClass);
 
-		// Install handler for incoming Joy payloads (print x,y,buttons) using specialized API
+		// Install handler for incoming Joy payloads: display + play tone
 		radiop.onReceiveJoystickMessage(function (jp) {
 			logJoyPayload("RX", jp);
 			// Decode 25-bit image value back to 5x5 and display
 			radiop.intToImage(jp.image).showImage(0);
+			jp.playSound()
+
 		});
 
-		// Infinite send loop creating random JoyPayloads
+		// Infinite send loop creating random JoyPayloads (receiver side plays sound)
 		while (true) {
 			let jp = createRandomJoyPayload();
+			// Tone was already randomized inside createRandomJoyPayload(); keep as-is
 			jp.send();
 			logJoyPayload("TX", jp);
-			// Optionally could show the image or play tone here
+			// Optionally could interpret tone here (left raw)
 			basic.pause(1000);
 		}
 	}
 
-	
+	export function testJpSend() {
+
+		radiop.initDefaults();
+		radiop.initBeacon(radiop.DeviceClass.JOYSTICK);
+
+		let lastJp: radiop.JoyPayload = undefined;
+
+		radiop.onReceiveJoystickMessage(function (jp) {
+			logJoyPayload("JP RX", jp);
+
+			// Check that this matches the last sent payload using x, y, accelX and button states
+			let match = lastJp ? true : false;
+			if (match) {
+				if (lastJp.x != jp.x || lastJp.y != jp.y || lastJp.accelX != jp.accelX) {
+					match = false;
+				} else {
+					for (let b = radiop.JoystickButton.A; b <= radiop.JoystickButton.F; b++) {
+						if (lastJp.buttonPressed(b as radiop.JoystickButton) != jp.buttonPressed(b as radiop.JoystickButton)) {
+							match = false;
+							break;
+						}
+					}
+				}
+			}
+			serial.writeLine("JP RX " + (match ? "match" : "no match"));
+
+			lastJp = undefined
+
+		});
+
+		while (true) {
+			if (!lastJp) {
+				lastJp = createRandomJoyPayload();
+				lastJp.send();
+				logJoyPayload("JP TX", lastJp);
+			} else {
+				basic.pause(500)
+			}
+			
+		}
+
+	}
+
+	export function testJpReceive() {
+		serial.writeLine("Test Joystick Receive");
+		radiop.initDefaults();
+		radiop.initBeacon(radiop.DeviceClass.CUTEBOT);
+
+		radiop.onReceiveJoystickMessage(function (jp) {
+			logJoyPayload("JP RX", jp);
+			jp.playSound();
+			let bs = radiop.JoyPayload.fromBuffer(jp.getBuffer());
+			logJoyPayload("BS TX", bs);
+			bs.send();
+		});
+	}
+
 
 
 }

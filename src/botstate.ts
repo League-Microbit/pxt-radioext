@@ -17,5 +17,6 @@ namespace radiop {
         // Alias: flags bit operations reuse buttons bitfield (byte 5)
         flagIsSet(flag: number): boolean { return this.buttonPressed(flag as any); }
         setFlag(flag: number, on: boolean) { this.setButton(flag as any, on); }
+
     }
 }
