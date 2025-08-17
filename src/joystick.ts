@@ -115,6 +115,8 @@ namespace radiop {
             this.tone = (octave << 4) | (note & 0x0f);
         }
 
+
+
         /* Durations are in 10s of ms, so 1/2 sec is 50 */
         get duration(): number { return this.buffer.getNumber(NumberFormat.UInt8LE, 13); }
         set duration(v: number) { this.buffer.setNumber(NumberFormat.UInt8LE, 13, v & 0xff); }
@@ -163,6 +165,30 @@ namespace radiop {
         get payloadLength() { return JoyPayload.PACKET_SIZE; }
 
 
+    }
+    
+    /**
+     * Given a frequency, return the closest (octave, note) pair.
+     * @param freq the frequency in Hz
+     */
+    //% blockId=joystick_get_octave_note_for_frequency block="octave and note for frequency %freq" group="Joystick"
+    //% weight=60
+    export function getOctaveNoteForFrequency(freq: number): [number, number] {
+        let minDiff = 99999;
+        let bestOctave = 0;
+        let bestNote = 0;
+        for (let octave = 1; octave <= 7; octave++) {
+            for (let note = 0; note < 12; note++) {
+                let f = music.getFrequencyForNote(octave, note);
+                let diff = Math.abs(f - freq);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    bestOctave = octave;
+                    bestNote = note;
+                }
+            }
+        }
+        return [bestOctave, bestNote];
     }
 
     /**
