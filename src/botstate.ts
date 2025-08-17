@@ -24,14 +24,14 @@ namespace radiop {
 
     /**
      * Send a BotState message with a tone and duration.
-     * @param note the note to play (Note enum, frequency in Hz)
+     * @param octave the octave (1-7)
+     * @param note the note (0-11)
      * @param beat the beat duration (BeatFraction enum)
      */
-    //% blockId=botstate_send_tone block="send bot state tone %note|duration %beat" group="Bot State"
-    export function sendBotStateTone(note: Note, beat: BeatFraction): void {
+    //% blockId=botstate_send_tone block="send bot state tone octave %octave|note %note|duration %beat" group="Bot State"
+    export function sendBotStateTone(octave: number, note: number, beat: BeatFraction): void {
         const bs = new radiop.BotStatePayload();
-        const pair = radiop.getOctaveNoteForFrequency(note);
-        bs.setOctaveNote(pair[0], pair[1]);
+        bs.setOctaveNote(octave, note);
         // Duration: BeatFraction is 1 (whole), 2 (half), 4 (quarter), etc. Assume 1 = 1000ms, so duration = 1000/beat/10
         let ms = 1000 / beat;
         bs.duration = Math.max(1, Math.min(255, Math.round(ms / 10)));
