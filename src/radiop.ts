@@ -204,6 +204,7 @@ namespace radiop {
      * @returns true if the radio is initialized, false otherwise
      */
     //% blockId=radio_is_initialized block="is radio initialized"
+    //% group="radio"
     export function isInitialized(): boolean {
         return initialized;
     }

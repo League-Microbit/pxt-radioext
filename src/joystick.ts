@@ -92,8 +92,8 @@ namespace radiop {
         set y(v: number) { this.su16(3, clip(Math.abs(v), 0, 1023) | 0); }
         
         // Get and set the button values. 
-        private gb(): number { return this.buffer.getNumber(NumberFormat.UInt8LE,5); }
-        private sb(v: number) { this.buffer.setNumber(NumberFormat.UInt8LE,5,v&0xff); }
+        protected gb(): number { return this.buffer.getNumber(NumberFormat.UInt8LE,5); }
+        protected sb(v: number) { this.buffer.setNumber(NumberFormat.UInt8LE,5,v&0xff); }
         
         get accelX(): number { return this.i16(6); }
         set accelX(v: number) { this.si16(6, clip(v,-1023,1023)|0); }
@@ -165,6 +165,15 @@ namespace radiop {
 
     }
 
+    /**
+     * Get the last received joystick payload
+     */
+    //% blockId=get_last_joy_payload
+    //% block="last joystick message"
+    //% group="Joystick"
+    export function getLastJoyPayload(): radiop.JoyPayload {
+        return radiop.lastJoyPayload;
+    }
 
     //% blockId=joystick_value block="joystick $payload value $value"
     //% group="Joystick"
