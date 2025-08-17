@@ -28,7 +28,7 @@ radiop.onReceiveJoystickMessage(function (payload) {
     serial.writeLine("Received Joystick Payload: ");
     if (radiop.buttonPressed(radiop.getLastJoyPayload(), radiop.JoystickButton.A)) {
         radiop.sendBotStateImage(IconNames.Duck)
-        //radiop.sendBotStateTone(Note.C, BeatFraction.Whole)
+        radiop.sendBotStateTone(4, 1, 1)
     } else if (radiop.buttonPressed(radiop.getLastJoyPayload(), radiop.JoystickButton.B)) {
         //radiop.sendBotStateTone(Note.A, BeatFraction.Whole)
         radiop.sendBotStateImage(IconNames.Heart)
